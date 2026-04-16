@@ -1,12 +1,12 @@
 # terraform/main.tf
 # 実行環境のパブリックIPを取得 (IPアドレスを実行環境に制限するため)
 data "http" "myip" {
-  url = "https://ifconfig.me"
+  url = "https://ifconfig.me/ip"
 }
 
 # Resource Group
-resource "azurerm_resource_group" "ita_rg" {
-  name     = "rg-ita-verification"
+resource "azurerm_resource_group" "eita_rg" {
+  name     = "rg-eita-verification"
   location = "Japan East"
 }
 
@@ -14,15 +14,15 @@ resource "azurerm_resource_group" "ita_rg" {
 
 
 # VM Instance (Standard_B2s)
-resource "azurerm_linux_virtual_machine" "ita_vm" {
-  name                = "vm-ita"
-  resource_group_name = azurerm_resource_group.ita_rg.name
-  location            = azurerm_resource_group.ita_rg.location
+resource "azurerm_linux_virtual_machine" "eita_vm" {
+  name                = "vm-eita"
+  resource_group_name = azurerm_resource_group.eita_rg.name
+  location            = azurerm_resource_group.eita_rg.location
   size                = "Standard_B2s"
   admin_username      = "azureuser"
 
   # 初期セットアップスクリプトの読み込み
-  user_data = filebase64("../scripts/install_ita.sh")
+  user_data = filebase64("../scripts/install_eita.sh")
 
   os_disk {
     caching              = "ReadWrite"
@@ -32,24 +32,17 @@ resource "azurerm_linux_virtual_machine" "ita_vm" {
 
   source_image_reference {
     publisher = "almalinux"
-    offer     = "almalinux-9"
-    sku       = "9_2-gen2"
+    offer     = "almalinux-x86_64"
+    sku       = "9-gen2"
     version   = "latest"
-  }
-
-  # AlmaLinux 9はマーケットプレイスのプラン情報が必要
-  plan {
-    name      = "9_2-gen2"
-    product   = "almalinux-9"
-    publisher = "almalinux"
   }
 
   admin_ssh_key {
     username   = "azureuser"
-    public_key = file("~/.ssh/id_rsa.pub") # 開発環境の公開鍵パスを確認して記載してください
+    public_key = file("~/.ssh/id_ed25519_eita_api_env.pub") # 開発環境の公開鍵パスを確認して記載してください
   }
 
   network_interface_ids = [
-    azurerm_network_interface.ita_nic.id,
+    azurerm_network_interface.eita_nic.id,
   ]
 }

@@ -1,1 +1,8 @@
 .env
+
+# Terraform関連のファイルを無視する設定
+**/.terraform
+**/.terraform.lock.hcl
+**/*.tfstate
+**/*.tfstate.*
+**/terraform.tfvars
