@@ -1,0 +1,14 @@
+[tool.mypy]
+# 型チェックの設定
+python_version = "3.11"
+warn_unused_configs = true
+warn_return_any = false
+disallow_untyped_defs = true      # すべての関数に型ヒントを必須にする
+disallow_incomplete_defs = true   # 不完全な型ヒントを禁止する
+check_untyped_defs = true         # 型ヒントのない関数もチェックする
+ignore_missing_imports = true     # 外部ライブラリの型定義がない場合の警告を抑制
+no_implicit_optional = true       # 関数の引数が省略可能かどうかを明示する
+
+exclude = [
+    '^tests/',
+]
