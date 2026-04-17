@@ -1,0 +1,19 @@
+{
+    "file": {
+        "ansible_cfg": null
+    },
+    "parameter": {
+        "movement_name": "movement-1",
+        "host_specific_format": "IP or Hostname",
+        "header_section": "- hosts: all \n  remote_user: \"{{ __loginuser__ }}\"\n  gather_facts: no",
+        "orchestrator": "Ansible Legacy Role",
+        "ansible_builder_options": null,
+        "ansible_agent_execution_environment": null,
+        "operational_parameter": null,
+        "execution_environment": null,
+        "delay_timer": 0,
+        "ansible_cfg": null,
+        "remarks": "",
+        "winrm_connection": null
+    }
+}
