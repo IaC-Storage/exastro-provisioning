@@ -14,12 +14,17 @@ class CDKEngine:
     def __init__(self, project_path: Path):
         """CDKEngineの初期化."""
         self.project_path = project_path
-        # テンプレートディレクトリの指定
+        # 各種テンプレートが格納されているディレクトリを指定
         template_dir = Path(__file__).parent.parent / "templates"
         self.env = Environment(loader=FileSystemLoader(template_dir))
 
     def create_manifest(self, project_id: str, conductor_name: str) -> None:
-        """マニフェストファイルを生成します."""
+        """テンプレートからマニフェストファイルを生成します.
+        
+        Args:
+            project_id: プロジェクトID
+            conductor_name: Conductorの名前
+        """
         template = self.env.get_template("manifest.yaml.j2")
         
         # テンプレートに渡す変数
@@ -47,6 +52,11 @@ class CDKEngine:
             (role_path / "defaults").mkdir(parents=True, exist_ok=True)
             (role_path / "tasks" / "main.yml").touch()
             (role_path / "defaults" / "main.yml").touch()
+
+    def init_exastro(self, manifest_path: Path) -> None:
+        """初期化プロセスを実行します."""
+        manifest = self.load_manifest(manifest_path)
+        self.sync_initial_ita_structure(manifest)
 
     def sync_initial_ita_structure(self, manifest: ManifestModel) -> None:
         """マニフェストの内容をITAに同期します."""
