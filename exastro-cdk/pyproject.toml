@@ -1,3 +1,8 @@
+[project]
+name = "exastro-cdk"
+version = "0.1.0"
+description = "Exastro CDK is a tool for managing infrastructure as code using AWS CDK."
+
 [project.scripts]
 exastro-cdk = "exastro_cdk.main:app"
 
