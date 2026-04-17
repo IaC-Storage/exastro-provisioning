@@ -11,7 +11,7 @@ app = typer.Typer(
 )
 
 # 各サブコマンドモジュールを登録
-app.add_typer(init.app, name="init", help="プロジェクトを初期化し、ITAへ基本構成を登録します")
+app.command(name="init", help="プロジェクトを初期化し、ITAへ基本構成を登録します")(init.project)
 app.add_typer(build.app, name="build-schema", help="Roleからパラメータシートの定義を自動抽出します")
 app.add_typer(apply.app, name="apply", help="ITA側の設定を最終的な状態に同期（デプロイ）します")
 

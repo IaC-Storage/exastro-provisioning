@@ -3,10 +3,17 @@ certifi==2026.2.25
 charset-normalizer==3.4.7
 click==8.3.2
 idna==3.11
+iniconfig==2.3.0
+Jinja2==3.1.6
 markdown-it-py==4.0.0
+MarkupSafe==3.0.3
 mdurl==0.1.2
+packaging==26.1
+pluggy==1.6.0
 Pygments==2.20.0
+pytest==9.0.3
 python-dotenv==1.2.2
+PyYAML==6.0.3
 requests==2.33.1
 rich==15.0.0
 shellingham==1.5.4

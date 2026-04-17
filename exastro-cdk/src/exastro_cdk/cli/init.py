@@ -19,17 +19,7 @@ def project(
     
     try:
         engine = CDKEngine(path)
-        # 1. manifestの準備 (Jinja2テンプレートからの生成など)
-        engine.create_manifest(project_id=path.name, conductor_name=f"{path.name}_conductor")
-
-        # 2. ローカルディレクトリの作成
-        engine.scaffold_local_files(manifest=None)
-
-        # 3. ITAへの初期登録
-        engine.init_exastro(manifest_path=manifest)
-        
-        rprint("[bold green]✔ 初期化が完了しました！[/bold green]")
-        rprint("次に `ansible/roles/` 内でRoleを開発し、`exastro-cdk build-schema` を実行してください。")
+        engine.run_init_process(manifest_path=manifest)
         
     except Exception as e:
         rprint(f"[bold red]Error:[/bold red] {e}")
