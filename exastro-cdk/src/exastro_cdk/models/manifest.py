@@ -10,6 +10,6 @@ class MovementModel:
 
 @dataclass
 class ManifestModel:
-    project_id: str
+    workspace_id: str
     conductor: dict[str, Any] = field(default_factory=dict)
     movements: list[MovementModel] = field(default_factory=list)

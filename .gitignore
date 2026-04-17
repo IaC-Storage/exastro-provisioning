@@ -1,4 +1,5 @@
 .env
+examples/
 
 # Terraform関連のファイルを無視する設定
 **/.terraform

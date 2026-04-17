@@ -12,7 +12,7 @@ def temp_project_dir(tmp_path):
 def mock_manifest():
     """テスト用のダミーManifestデータ"""
     return ManifestModel(
-        project_id="test-id",
+        workspace_id="test-id",
         conductor={"name": "Test Flow", "description": "Desc"},
         movements=[
             MovementModel(name="test_role_1", description="desc 1"),

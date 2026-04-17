@@ -1,4 +1,5 @@
 {
+    "python.defaultInterpreterPath": "${workspaceFolder}/exastro-cdk/venv/bin/python",
     "mypy-type-checker.args": [
         "\"mypy-type-checker.args\" = [\"--config-file=exastro-cdk/pyproject.toml\"]"
     ]
