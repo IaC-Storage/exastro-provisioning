@@ -1,17 +1,21 @@
 # 01_FOUNDATION_PHASE.md: Exastro-CDK 開発計画
 
-## 1. 概要
-本ドキュメントは、Exastro IT Automation (ITA) のリソースをコードで管理するためのツール `exastro-cdk` の第1段階（Foundation Phase）における開発方針と検討項目をまとめたものである。
+## 1. プロジェクトビジョン
+Exastro-CDKは、Exastro IT Automation（以下ITA）の設定を宣言的なコードで管理し、自動化ジョブの構築プロセスを「直感的」かつ「再現可能」にすることを目的とする。
+
+特にIaCに不慣れな開発者でも、迷わずベストプラクティスに基づいた自動化を実装できる体験を提供する。
 
 ## 2. 開発戦略 (Development Strategy)
 
 ### 2.1 言語選定とマイグレーションパス
-* **初期開発 (MVP):** **Python** を採用する。
-    * 理由: 仕様の流動性に対応するための開発スピード重視、および既存の自動化エコシステム（Ansible等）との親和性。
-* **移行計画:** 実用に耐えられないパフォーマンス（大量リソース同期時の速度、並列処理の限界）が確認された場合、**Go** への切り替えを検討する。
-* **AI活用設計:** Goへの移植を容易にするため、以下のルールを遵守する。
-    * `Pydantic` や型ヒント（Type Hints）を徹底し、データ構造を厳密に定義する。
-    * ロジックとI/O（API通信、ファイル操作）を疎結合にし、インターフェースを抽象化する。
+* **言語: Python (MVP)** 
+    * 高速なプロトタイピングと、Ansible/YAMLエコシステムとの親和性を優先
+    * 将来的なパフォーマンス不足が懸念される場合はGoへの移行を検討するが、その際のリファクタリングコストを下げるためPydantic等を用いた厳密な型定義を行う。
+* **設計思想:** 
+    * **manifest.yaml** を単一の真実（SSOT）とする。
+    * 複雑な分岐を持つConductorは「テスト容易性を損なうアンチパターン」と定義し、原則として**横一列（シーケンシャル）**な実行フローのみをサポートする。
+    * 変数衝突を避けるため、`role名_変数名` の形式を推奨/強制する。
+
 
 ## 3. Phase.1 MVP目標: 「Conductorの自動生成」
 汎用的なツールを構築する前に、具体的かつ価値の高いユースケースとして**「特定の用途のConductorを1つ完全にコードから生成する」**ことを目標とする。
@@ -21,37 +25,59 @@
 * **Conductor:** ノード（Movement）とエッジ（実行順序）のワークフロー定義。
 * **変数/パラメータ:** 実行に必要な環境変数やパラメータの紐付け。
 
-## 4. 検討・実装アイテムリスト
+## 4. 開発フロー (CDK Workflow)
 
-### 4.1 CLI Core & Project Structure
+### Step 1: init - アウトラインの生成
+
+開発者が `manifest.yaml` に作業リストを記述し`exastro-cdk init` を実行する。
+
+`manifest.yaml`はGitHub等にサンプルを保存しておく。
+
+- **Exastro側の処理:**
+  - `movements` リストに基づき、Movementを自動登録。
+  - 登録したMovementを横一列に連結したConductorを自動作成。
+- **ローカル側の処理:**
+  - 各タスクに対応する Ansible Role ディレクトリを自動生成（`ansible-galaxy init` 相当）。
+
+### Step 2: build-schema - 変数定義の抽出
+
+Roleの開発が進み、`defaults/main.yml` に変数が定義された段階で実行する。
+
+- **処理内容:** Role内の変数定義をスキャンし、パラメータシート用のメタデータ（JSON等）を生成。
+- **規約:** 
+  - 変数名には必ずRole名をプレフィックスとして付与する（`.ansible-lint` 等でチェックを検討）。
+  - コメントアノテーション（例: `# @cdk-type: integer`）により、型や説明文をメタデータに付加する。
+
+### Step 3: apply - Exastroとの同期
+
+* **パラメータシート作成:** 抽出したメタデータに基づき、ITA上にパラメータシートを自動構築。
+* **代入値自動登録設定:** パラメータシートと各Movementの変数を自動で紐付け。
+* **Roleアップロード:** 完成したRoleをZip化し、対応するMovementへデプロイ。
+
+
+
+## 5. 検討・実装アイテムリスト
+
+### 5.1 CLI Core & Project Structure
 * `exastro-cdk init` コマンドの実装。
-* **推奨ディレクトリ構造案:**
-    ```text
-    exastro-project/
-    ├── manifests/          # リソース定義 (YAML)
-    │   ├── conductors/
-    │   └── movements/
-    ├── environments/       # 環境別変数定義
-    └── cdk.yaml            # 接続先情報・全体設定
-    ```
 
-### 4.2 Schema定義 (YAML DSL)
-* **名前ベースのリファレンス:** UUID等のID指定ではなく、名前（Name）でリソース間を紐付ける仕組み。
-* **抽象化:** コンダクターのノード座標の自動計算ロジック、あるいは簡略化されたフロー記述形式の検討。
-
-### 4.3 API 通信基盤
+### 5.2 API 通信基盤
 * Exastro APIクライアントの基盤実装。
 * 認証情報の安全な管理（環境変数および設定ファイル）。
 * 基本的なCRUD（Create/Read/Update/Delete）操作の抽象化。
 
-### 4.4 Conductor 固有の課題
+### 5.3 Conductor 固有の課題
 * **依存関係の解決:** Movementが先に存在しなければConductorが作れない等のリソース生成順序の制御。
 * **冪等性の初期設計:** 既存のConductorが存在する場合の振る舞い（上書き/スキップ/バージョンアップ）の定義。
 
-## 5. Phase.1 完了条件 (Exit Criteria)
-1.  `init` コマンドにより標準的なプロジェクト構成が生成されること。
-2.  YAMLで定義した特定のワークフロー（Conductor）が、コマンド一発でExastro ITA環境上に正しく構築されること。
-3.  構築されたConductorが、Exastroの管理画面から正常に実行可能な状態であること。
+
+
+## 6. Phase.1 完了条件 (Exit Criteria)
+
+1.  `exastro-cdk init` で雛形ができる。
+2.  `manifest.yaml` にConductorとMovementの構成を記述する。
+3.  `exastro-cdk apply` (または `sync`) を実行。
+4.  **Exastro ITAの管理画面を開くと、意図した通りのConductor作成・ワークフロー構築が完了している。**
 
 ---
 **Next Step:** 具体的な `manifests` のスキーマ定義および、API疎通確認用のプロトタイプ実装。
