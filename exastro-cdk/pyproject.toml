@@ -17,7 +17,7 @@ exclude = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = ["src"]
 addopts = "-ra -q"
 testpaths = [
     "tests",
