@@ -1,3 +1,6 @@
+[project.scripts]
+exastro-cdk = "exastro_cdk.main:app"
+
 [tool.mypy]
 # 型チェックの設定
 python_version = "3.11"
