@@ -1,6 +1,12 @@
-## 開発ロードマップ
+## プロジェクトビジョン
+Exastro-CDKは、Exastro IT Automation（以下ITA）の設定を宣言的なコードで管理し、自動化ジョブの構築プロセスを「直感的」かつ「再現可能」にすることを目的とする。
 
-### 1. Foundation Phase
+特にIaCに不慣れな開発者でも、迷わずベストプラクティスに基づいた自動化を実装できる体験を提供する。
+
+
+## 1. 開発ロードマップ
+
+### 1.1 Foundation Phase
 開発者が「まずは触れる」状態を作るためのフェーズ
 
 - CLI Coreの実装： `exastro-cdk` のベースフレームワークの構築 (`python/go` など)
@@ -8,21 +14,21 @@
   - ディレクトリ構成も含めて、プロジェクトの基本的な構造を定義
 - Schema定義: YAML/JSONスキーマの初版策定
 
-### 2. Syncronization Phase
+### 1.2 Syncronization Phase
 核心となる「宣言的定義」を実現するフェーズ
 
 - `sync` コマンド(作成・更新)の実装：宣言的定義に基づいて、IT Automationの構成を自動的に同期する機能
   - APIとの通信ロジックの実装
   - 差分検出と適用のロジックの実装
 
-### 3. Advanced Sync & Lifecycle Management Phase
+### 1.3 Advanced Sync & Lifecycle Management Phase
 運用の複雑さを排除して実用性を向上させるフェーズ
 
 - Pruning機能の実装: 定義ファイルから削除されたリソースをExastro環境から安全に削除するロジックの開発
 - Workspace文理: 開発者ごとのテナント分離ロジックを確立し、`sync` 時の干渉を防止する機能の実装
 - `diff` コマンドの実装: 定義ファイルと現在の環境状態の差分を表示するドライラン機能の開発
 
-### 4. Validation & Test Phase
+### 1.4 Validation & Test Phase
 製品＋遠隔運用の品質を自動で担保するフェーズ
 
 - `test` コマンド
@@ -30,6 +36,17 @@
 - GitHub Actions連携: CI/CDパイプラインでの自動テストとバリデーションの実装
 
 
-### 5. Packaging & Release Phase
+### 1.5 Packaging & Release Phase
 成果物を流通可能な形式(カートリッジ)にまとめるフェーズ
+
+## 2. 開発戦略 (Development Strategy)
+
+### 2.1 言語選定とマイグレーションパス
+* **言語: Python (MVP)** 
+    * 高速なプロトタイピングと、Ansible/YAMLエコシステムとの親和性を優先
+    * 将来的なパフォーマンス不足が懸念される場合はGoへの移行を検討するが、その際のリファクタリングコストを下げるためPydantic等を用いた厳密な型定義を行う。
+* **設計思想:** 
+    * **manifest.yaml** を単一の真実（SSOT）とする。
+    * 複雑な分岐を持つConductorは「テスト容易性を損なうアンチパターン」と定義し、原則として**横一列（シーケンシャル）**な実行フローのみをサポートする。
+    * 変数衝突を避けるため、`role名_変数名` の形式を推奨/強制する。
 

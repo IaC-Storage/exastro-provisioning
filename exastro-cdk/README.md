@@ -57,6 +57,25 @@ Exastro CDKを導入することで：
 
 ---
 
+## 5.1 FOUNDATION_PHASE 完了条件 (Exit Criteria)
+
+ロードマップの Foundation Phase は、以下の実装項目がすべて達成された時点で完了とみなします。
+
+### 実装スコープ
+| 項目 | 内容 |
+| :--- | :--- |
+| **CLI Core** | `exastro-cdk` のベースフレームワーク構築 |
+| **`init` コマンド** | プロジェクト雛形の自動生成（ディレクトリ構成・Ansible Role・ITA登録） |
+| **Schema定義** | YAML/JSONスキーマの初版策定 |
+
+### 受け入れ基準
+1. `exastro-cdk init` を実行すると、Ansible Roleのディレクトリ構成とプロジェクト雛形が自動生成される。
+2. `manifest.yaml` にConductorとMovementの構成を記述できる。
+3. `exastro-cdk apply`（または `sync`）を実行できる。
+4. Exastro ITAの管理画面を開くと、`manifest.yaml` の定義通りにConductorとワークフローが構築されている。
+
+---
+
 ### 補足：`init` 時の manifest.yaml について
 現場のフローに基づき、`exastro-cdk init` は以下の挙動を想定しています。
 * **既存 manifest がある場合:** その内容に従ってITAへの登録とRoleの雛形生成を即座に実行。
