@@ -1,4 +1,4 @@
-# 01_FOUNDATION_PHASE.md: Exastro-CDK 開発計画
+# FOUNDATION_PHASE
 
 ## 1. プロジェクトビジョン
 Exastro-CDKは、Exastro IT Automation（以下ITA）の設定を宣言的なコードで管理し、自動化ジョブの構築プロセスを「直感的」かつ「再現可能」にすることを目的とする。

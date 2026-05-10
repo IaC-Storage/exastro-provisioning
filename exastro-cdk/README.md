@@ -61,3 +61,15 @@ Exastro CDKを導入することで：
 現場のフローに基づき、`exastro-cdk init` は以下の挙動を想定しています。
 * **既存 manifest がある場合:** その内容に従ってITAへの登録とRoleの雛形生成を即座に実行。
 * **既存 manifest がない場合:** 対話形式（Interactive）またはテンプレートから新規に `manifest.yaml` を生成し、開発のスタートを補助。
+
+---
+
+## 6. 利用の前提条件
+
+1. オーガナイゼーションは作成済みであること
+2. リフレッシュトークンは発行済みであること
+
+## 参考資料
+
+1. Exastro ITA Workspace API
+   - https://ita-docs.exastro.org/ja/2.7/reference/api/operator/platform-api.html

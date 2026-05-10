@@ -6,7 +6,7 @@
 
 1. カートリッジ開発
    - 顧客へ提供する製品とその運用を支える運用管理ツールを自動提供する仕組みをExastroコンポーネント（カートリッジ）として開発する
-   - 主コンポーネント: Ansible Playbook + パラメータシート定義（SON）+ Conductor/Movement(JSON)
+   - 主コンポーネント: Ansible Playbook + パラメータシート定義（JSON）+ Conductor/Movement(JSON)
    - 追加コンポーネント: テスト用Conductor、Playbook、テストパラメータセット
 2. カートリッジ検証・テスト
    - 検証環境で開発したコンポーネント一式をExastroへ一括登録

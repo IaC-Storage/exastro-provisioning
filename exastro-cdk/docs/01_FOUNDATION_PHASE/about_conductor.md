@@ -1,6 +1,6 @@
-自動化ジョブフローの作成には次の作業が必要だが、直感的でないためCDKでは宣言的定義から自動生成することを目指す。
+Conductor(自動化ジョブフロー)の作成には次の作業が必要だが、直感的でないためCDKでは宣言的定義から自動生成することを目指す。
 
----
+**コマンドリスト**
 
 1. Initialize: exastro-cdk init --target-usecase middleware-installation
    - 必要なディレクトリ構造と、manifest.yaml テンプレートが生成される。
@@ -40,7 +40,7 @@ movements:
 http_port: 80
 ```
 
-### ジョブフローの作成
+### Conductor作成のための作業リスト
 1. Movement作成
 2. Conductor作成 (作成したMovementをノードとして紐付け)
    - ノードの座標の自動計算は難しい可能性が高い
@@ -55,7 +55,7 @@ http_port: 80
 6. Parameter SheetとPlaybook変数の紐付け
 
 
-### ジョブフローの実行
+### Conductor実行のための作業リスト
 1. 作業対象ホストの登録
 2. Operation作成
 3. Parameter Sheetへ値を入力

@@ -1,13 +1,3 @@
-## 前提条件
-1. オーガナイゼーションは作成済みであること
-2. リフレッシュトークンは発行済みであること
-
-## API URL
-
-1. Workspace API
-   - https://ita-docs.exastro.org/ja/2.7/reference/api/operator/platform-api.html
-
-
 ## 開発ロードマップ
 
 ### 1. Foundation Phase
@@ -42,5 +32,4 @@
 
 ### 5. Packaging & Release Phase
 成果物を流通可能な形式(カートリッジ)にまとめるフェーズ
-
 

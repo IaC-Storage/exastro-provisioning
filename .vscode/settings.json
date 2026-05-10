@@ -2,5 +2,15 @@
     "python.defaultInterpreterPath": "${workspaceFolder}/exastro-cdk/venv/bin/python",
     "mypy-type-checker.args": [
         "\"mypy-type-checker.args\" = [\"--config-file=exastro-cdk/pyproject.toml\"]"
-    ]
+    ],
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/venv": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+    }
 }
