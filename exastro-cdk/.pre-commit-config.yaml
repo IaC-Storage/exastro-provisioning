@@ -1,0 +1,23 @@
+# .pre-commit-config.yaml
+repos:
+  # --- Ruff (Linter & Formatter) ---
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.10
+    hooks:
+      # Linter
+      - id: ruff
+        args: [--fix]
+      # Formatter
+      - id: ruff-format
+
+  # --- Mypy (Type Checker) ---
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.0
+    hooks:
+      - id: mypy
+        exclude: ^tests/
+        additional_dependencies:
+          - pytest
+          - pytest-mock
+          - pydantic
+          - dotenv
