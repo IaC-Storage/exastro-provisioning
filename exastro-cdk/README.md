@@ -17,6 +17,83 @@ Exastro CDKは、**`manifest.yaml` を唯一の正解（SSOT）**とし、そこ
 | **開発者フレンドリーな抽象化** | `manifest.yaml` に作業リストを書くだけで、Ansible Roleの雛形とITA構成を自動生成。 |
 | **Python MVP戦略** | 開発スピード重視でPythonを採用。将来的なGoへの移行を見据えてPydanticで厳密な型定義を実施。 |
 
+### SSOT・ローカル開発環境・ITA環境の関係
+
+```mermaid
+graph TB
+    subgraph LOCAL["ローカル開発環境"]
+        MANIFEST["📄 manifest.yaml\n─────────────────\nconductor:\n  name: os-setup\nmovements:\n  - name: os_setup\n    role: os_setup"]
+        SCHEMA["📋 JSON Schema\n(IDE補完・バリデーション)"]
+        ROLES["📁 ansible/roles/\n└── os_setup/\n    ├── tasks/main.yml\n    └── defaults/main.yml"]
+        CDK["⚙️ exastro-cdk CLI"]
+    end
+
+    subgraph ITA["Exastro IT Automation (ITA)"]
+        MOVEMENT["Movement\n(実行単位)"]
+        ROLEPKG["ロールパッケージ\n(Ansible Role ZIP)"]
+        BINDING["Movement-ロール紐付け\n(交差テーブル)"]
+        CONDUCTOR["Conductor\n(ワークフロー)"]
+        ASSIGN["代入値自動登録設定"]
+    end
+
+    SCHEMA -. "補完・バリデーション" .-> MANIFEST
+    MANIFEST -- "SSOT（唯一の真実）" --> CDK
+    ROLES -- "ZIPアーカイブ" --> CDK
+
+    CDK -- "① init\nMovement登録\nConductor作成" --> MOVEMENT
+    CDK -- "① init\nConductor作成" --> CONDUCTOR
+    CDK -- "② sync\nアップロード" --> ROLEPKG
+    CDK -- "② sync\n紐付け更新" --> BINDING
+    CDK -- "② sync\n設定更新" --> ASSIGN
+
+    MOVEMENT --- BINDING
+    ROLEPKG --- BINDING
+    MOVEMENT --> CONDUCTOR
+    BINDING --> CONDUCTOR
+```
+
+### 将来の拡張ビジョン: 抽象化レイヤーとしての Exastro CDK
+
+Exastro CDKのコアエンジン（差分検出・依存解決・API抽象化）は、CLIに限らず様々なインターフェースから呼び出せる**抽象化レイヤー**として設計する。将来的にはMCPサーバーやIDE Skillsへの拡張を想定している。
+
+```mermaid
+graph BT
+    subgraph ITA["Exastro IT Automation"]
+        APIS["REST API\n(Movement / Conductor\n ロールパッケージ / 代入値)"]
+    end
+
+    subgraph CDK["Exastro CDK  ── 抽象化レイヤー ──"]
+        direction LR
+        MANIFEST["📄 manifest.yaml\nパーサー・バリデーター"]
+        ENGINE["⚙️ Core Engine\n差分検出・依存解決"]
+        CLIENT["🔌 ITA Client\nAPI抽象化"]
+        MANIFEST --> ENGINE --> CLIENT
+    end
+
+    subgraph INTERFACES["インターフェース層"]
+        direction LR
+        CLI["💻 CLI\nexastro-cdk sync\n─────\n現在"]
+        CICD["🔄 CI/CD\nGitLab CI\nGitHub Actions\n─────\n近期"]
+        MCP["🤖 MCP Server\nAI エージェント連携\n(Claude / Copilot 等)\n─────\n将来"]
+        SKILLS["🧩 IDE Skills\nVS Code Copilot\nJetBrains AI\n─────\n将来"]
+    end
+
+    CLIENT -->|"CRUD\n操作"| APIS
+    CLI --> ENGINE
+    CICD --> ENGINE
+    MCP --> ENGINE
+    SKILLS --> ENGINE
+```
+
+**拡張の方向性:**
+
+| インターフェース | 概要 |
+| :--- | :--- |
+| **CLI（現在）** | 開発者が直接実行する `exastro-cdk` コマンド群 |
+| **CI/CD（近期）** | GitLab CI / GitHub Actions から `sync` を自動実行 |
+| **MCP Server（将来）** | AIエージェント（Claude / Copilot 等）がツールとして呼び出し、自然言語でITAを操作 |
+| **IDE Skills（将来）** | VS Code Copilot等のSkillsとして組み込み、エディタ上から直接 `sync` / `diff` を実行 |
+
 ---
 
 ## 2. ユーザーフロー
