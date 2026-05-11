@@ -1,6 +1,7 @@
 # exastro-cdk/python/token/create_access_token.py
 import os
 import sys
+
 import requests
 from dotenv import load_dotenv
 
@@ -20,7 +21,7 @@ endpoint = f"{uri}/auth/realms/{organization_id}/protocol/openid-connect/token"
 request_body = {
     "client_id": f"_{organization_id}-api",
     "grant_type": "refresh_token",
-    "refresh_token": refresh_token
+    "refresh_token": refresh_token,
 }
 
 # APIリクエストを送信してアクセストークンを取得

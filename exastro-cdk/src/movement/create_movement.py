@@ -1,7 +1,8 @@
 # exastro-cdk/src/movement/create_movement.py
+import json
 import os
 import sys
-import json
+
 import requests
 from dotenv import load_dotenv
 
@@ -22,11 +23,11 @@ endpoint = f"{uri}/api/{organization_id}/workspaces/{WORKSPACE_ID}/ita/menu/{MEN
 
 headers = {
     "Content-Type": "application/json",
-    "Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"
+    "Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}",
 }
 
 # リクエストボディ, ./request_bodies/rq_body_create_movement.json から読み込む
-with open("./request_bodies/rq_body_create_movement.json", "r") as f:
+with open("./request_bodies/rq_body_create_movement.json") as f:
     request_body = json.load(f)
 
 # APIリクエストを送信してアクセストークンを取得

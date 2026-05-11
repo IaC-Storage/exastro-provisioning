@@ -2,6 +2,7 @@
 
 import os
 import sys
+
 import requests
 from dotenv import load_dotenv
 
@@ -25,25 +26,21 @@ description = "sandbox environment"  # ワークスペースの説明を指定
 environments = [""]
 
 # ワークスペース管理者のリストを指定, ユーザー名から取得する必要あり
-workspace_administrators = [
-    {
-        "id": "0165db47-0b43-412f-bb20-366ba79c3655"
-    }
-]
+workspace_administrators = [{"id": "0165db47-0b43-412f-bb20-366ba79c3655"}]
 
 headers = {
     "Content-Type": "application/json",
-    "Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"
+    "Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}",
 }
 
 request_body = {
-  "id": workspace_id,
-  "name": workspace_name,
-  "informations": {
-    "description": description,
-    # "environments": environments,
-    "workspace_administrators": workspace_administrators
-  }
+    "id": workspace_id,
+    "name": workspace_name,
+    "informations": {
+        "description": description,
+        # "environments": environments,
+        "workspace_administrators": workspace_administrators,
+    },
 }
 
 # APIリクエストを送信してワークスペースを作成
