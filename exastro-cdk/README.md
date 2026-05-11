@@ -1,94 +1,145 @@
-# Exastro CDK (Cloud Development Kit for Exastro) 概要
+# Exastro CDK (Cloud Development Kit for Exastro)
 
 Exastro CDKは、**Exastro IT Automation (ITA)** の構成管理を「宣言的定義」によって自動化し、**インフラ構築ジョブの作成・管理・運用をコード（IaC）ベースにシフトさせるための開発キット**です。
 
-## 1. コンセプト： "Single Source of Truth"
-Exastro ITAは非常に強力な自動化プラットフォームですが、画面上の手動操作が介在し構成の再現性や構成管理に課題が生じることがあります。
-
-Exastro CDKは、**`manifest.yaml` を唯一の正解（単一の真実）**とし、そこからITA上の「Conductor」「Movement」「パラメータシート」「代入値自動登録」を自動生成します。
-
 ---
 
-## 2. 主要な特徴と設計思想
+## 1. コンセプト: "Single Source of Truth"
+
+Exastro ITAは非常に強力な自動化プラットフォームですが、画面上の手動操作が介在し構成の再現性や構成管理に課題が生じることがあります。
+
+Exastro CDKは、**`manifest.yaml` を唯一の正解（SSOT）**とし、そこからITA上の「Conductor」「Movement」「ロールパッケージ」「代入値自動登録」を自動生成します。
 
 | 特徴 | 内容 |
 | :--- | :--- |
-| **シーケンシャル・デザイン** | 複雑な分岐フローを避け、**横一列（シーケンシャル）**のConductor構成を推奨。テスト容易性と可読性を最大化します。 |
-| **変数規約の自動適用** | 変数衝突を防ぐため、`role名_変数名` のプレフィックス付与をルール化。`.ansible-lint` 等での自動チェックをサポート。 |
-| **開発者フレンドリーな抽象化** | IaCの知見が浅い開発者でも、`manifest.yaml` に作業リストを書くだけで、ベストプラクティスに則ったAnsible Roleの雛形が手に入ります。 |
-| **Python MVP戦略** | 開発スピード重視でPythonを採用しつつ、将来的なGoへの移行を見据えた厳密な型定義（Pydantic等）を実施。 |
+| **シーケンシャル・デザイン** | 複雑な分岐フローを避け、横一列のConductor構成を推奨。テスト容易性と可読性を最大化。 |
+| **変数規約の自動適用** | 変数衝突を防ぐため、`role名_変数名` のプレフィックス付与をルール化。 |
+| **開発者フレンドリーな抽象化** | `manifest.yaml` に作業リストを書くだけで、Ansible Roleの雛形とITA構成を自動生成。 |
+| **Python MVP戦略** | 開発スピード重視でPythonを採用。将来的なGoへの移行を見据えてPydanticで厳密な型定義を実施。 |
 
 ---
 
-## 3. ワークフロー（3つの主要ステップ）
+## 2. ユーザーフロー
 
-開発者は以下のサイクルでジョブフローを構築します。
+製品開発部門の開発者は以下のサイクルで ITA 上のジョブフローを構築します。
 
-### Step 1: `init` (プロジェクト初期化)
-現場のニーズに合わせ、**「既存の manifest.yaml」** を起点とした初期化をサポートします。
-* **ローカル:** `ansible/roles/` 以下に各タスクのディレクトリを自動生成。
-* **Exastro:** Movementの登録と、横一列に繋がったConductorを自動作成。
+```
+① manifest.yaml を記述
+        ↓
+② exastro-cdk init    ← Ansible Role雛形の生成 + ITA への Movement/Conductor 登録
+        ↓
+   [Role 開発: tasks/main.yml, defaults/main.yml を実装]
+        ↓
+③ exastro-cdk sync    ← ロールパッケージのアップロード + 差分の同期
+        ↓
+   ITA 管理画面で Conductor を実行して動作確認
+        ↓
+④ カートリッジとして出力・本番適用
+```
 
-### Step 2: `build-schema` (スキーマ抽出)
-Roleの開発（`defaults/main.yml` の記述）が完了した後、その内容からパラメータシートの定義を自動抽出します。
-* **アノテーション:** コメント（`# @cdk-type: integer`）を読み取り、型や説明をメタデータ化します。
+### Step 1: `init` — プロジェクト初期化（2段階）
 
-### Step 3: `apply` (完全同期)
-抽出したスキーマを元に、ITA側の最終的な設定を完了させます。
-* **パラメータシート:** ITA上にメニューを自動構築。
-* **代入値自動登録:** 「パラメータシートの項目」と「Movementの変数」を自動紐付け。
-* **デプロイ:** RoleをZip化し、各Movementへ一括アップロード。
+**第1回実行:** `manifest.yaml` が存在しない場合、テンプレートを自動生成して終了。
 
----
+```bash
+$ exastro-cdk init
+# → manifest.yaml を生成（編集してから再実行）
+```
 
-## 4. なぜ Exastro CDK なのか？
+**第2回実行:** `manifest.yaml` の内容に基づいてローカルとExastro両側にリソースを展開。
 
-従来のITA運用では、ジョブフローを1つ作るために「Movement作成」「Conductor配置」「パラメータシート定義」「代入値紐付け」という多くの画面操作が必要でした。
+```bash
+$ exastro-cdk init
+# ローカル: ansible/roles/<role_name>/ のディレクトリ構成を生成
+# Exastro:  Movement を登録し、横一列の Conductor を自動作成
+```
 
-Exastro CDKを導入することで：
-1. **構築時間の短縮:** 画面操作の90%以上をコードから自動化。
-2. **ミスの排除:** 手動による変数の紐付けミスをゼロに。
-3. **資産のポータビリティ:** `manifest.yaml` と `roles` をGit管理するだけで、別環境のExastroへ全く同じ環境を即座に再構築可能。
+### Step 2: `sync` — 宣言的同期
 
----
+`manifest.yaml` とExastro ITA上の実態の差分を検出し、作成・更新を適用します。
 
-## 5. Phase.1 のフォーカス
-まずは **「1つのConductorを完成させる」** ことをゴールに据え、実務で最も工数がかかる「パラメータシートと変数の紐付け」の自動化の実現を目指します。
+```bash
+$ exastro-cdk sync
+```
 
----
+リソースの操作順序（依存関係に従う）:
 
-## 5.1 FOUNDATION_PHASE 完了条件 (Exit Criteria)
-
-ロードマップの Foundation Phase は、以下の実装項目がすべて達成された時点で完了とみなします。
-
-### 実装スコープ
-| 項目 | 内容 |
-| :--- | :--- |
-| **CLI Core** | `exastro-cdk` のベースフレームワーク構築 |
-| **`init` コマンド** | プロジェクト雛形の自動生成（ディレクトリ構成・Ansible Role・ITA登録） |
-| **Schema定義** | YAML/JSONスキーマの初版策定 |
-
-### 受け入れ基準
-1. `exastro-cdk init` を実行すると、Ansible Roleのディレクトリ構成とプロジェクト雛形が自動生成される。
-2. `manifest.yaml` にConductorとMovementの構成を記述できる。
-3. `exastro-cdk apply`（または `sync`）を実行できる。
-4. Exastro ITAの管理画面を開くと、`manifest.yaml` の定義通りにConductorとワークフローが構築されている。
-
----
-
-### 補足：`init` 時の manifest.yaml について
-現場のフローに基づき、`exastro-cdk init` は以下の挙動を想定しています。
-* **既存 manifest がある場合:** その内容に従ってITAへの登録とRoleの雛形生成を即座に実行。
-* **既存 manifest がない場合:** 対話形式（Interactive）またはテンプレートから新規に `manifest.yaml` を生成し、開発のスタートを補助。
+```
+Movement 作成/更新
+    ↓
+ロールパッケージ アップロード
+    ↓
+Movement-ロール 紐付け（交差テーブル）
+    ↓
+Conductor 作成/更新
+    ↓
+代入値自動登録設定 更新
+```
 
 ---
 
-## 6. 利用の前提条件
+## 3. 開発ロードマップ
 
-1. オーガナイゼーションは作成済みであること
-2. リフレッシュトークンは発行済みであること
+| フェーズ | 内容 | 詳細 |
+| :--- | :--- | :--- |
+| **1. Foundation Phase** | `init` コマンド・CLIコア・Schemaドラフト | [docs/01_FoundationPhase/](docs/01_FoundationPhase/README.md) |
+| **2. Synchronization Phase** | `sync` コマンド・API通信・差分検出 | [docs/02_SynchronizationPhase/](docs/02_SynchronizationPhase/README.md) |
+| **3. Advanced Sync & Lifecycle** | Pruning・Workspace分離・`diff` コマンド | [docs/03_AdvancedSyncAndLifecycleManagementPhase/](docs/03_AdvancedSyncAndLifecycleManagementPhase/README.md) |
+| **4. Validation & Test Phase** | Validation Engine・`test` コマンド・CI連携 | [docs/04_ValidationAndTestPhase/](docs/04_ValidationAndTestPhase/README.md) |
+| **5. Packaging & Release Phase** | PyPI公開・カートリッジ形式・ドキュメント整備 | [docs/05_PackagingAndReleasePhase/](docs/05_PackagingAndReleasePhase/README.md) |
+
+現在のフォーカス: **Phase 1 — Foundation Phase**
+
+---
+
+## 4. 利用の前提条件
+
+- オーガナイゼーションは作成済みであること
+- リフレッシュトークンは発行済みであること
+
+### 環境変数
+
+```bash
+export EXASTRO_BASE_URL=https://your-exastro-instance
+export EXASTRO_REFRESH_TOKEN=your_refresh_token
+export EXASTRO_ORGANIZATION_ID=your_org_id
+export EXASTRO_WORKSPACE_ID=your_workspace_id
+```
+
+---
+
+## 5. 開発への参加
+
+コーディング規約・ブランチ戦略・レビュープロセス・Linter設定については [docs/contributing.md](docs/contributing.md) を参照してください。
+
+```bash
+# 開発環境セットアップ
+pip install -e ".[dev]"
+pre-commit install
+```
+
+---
+
+## 6. ドキュメント構成
+
+```
+docs/
+├── roadmap.md                              # 開発ロードマップ全体
+├── contributing.md                         # コーディング規約・開発ルール
+├── user_flow.md                            # ユーザーフロー・ユースケース
+├── 01_FoundationPhase/README.md            # Phase 1 詳細
+├── 02_SynchronizationPhase/README.md       # Phase 2 詳細
+├── 03_AdvancedSyncAndLifecycleManagementPhase/README.md  # Phase 3 詳細
+├── 04_ValidationAndTestPhase/README.md     # Phase 4 詳細
+├── 05_PackagingAndReleasePhase/README.md   # Phase 5 詳細
+└── specs/
+    ├── ita-api-reference.md                # ITA APIエンドポイントリファレンス
+    └── init-command.md                     # init コマンド仕様
+```
+
+---
 
 ## 参考資料
 
-1. Exastro ITA Workspace API
-   - https://ita-docs.exastro.org/ja/2.7/reference/api/operator/platform-api.html
+- [Exastro ITA 公式APIドキュメント](https://ita-docs.exastro.org/ja/2.7/reference/api/operator/platform-api.html)
+
