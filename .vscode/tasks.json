@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Pre-commit run all files",
+            "type": "shell",
+            "command": "source venv/bin/activate && pre-commit run --all-files",
+            "options": {
+                "cwd": "${workspaceFolder}/exastro-cdk"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "group": "test-runners"
+            }
+        },
+        {
+            "label": "Pytest all tests",
+            "type": "shell",
+            "command": "source venv/bin/activate && pytest",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/exastro-cdk"
+            },
+            "presentation": {
+                "group": "test-runners"
+            }
+        }
+    ]
+}
