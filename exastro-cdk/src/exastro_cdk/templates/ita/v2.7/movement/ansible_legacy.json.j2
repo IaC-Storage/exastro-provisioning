@@ -1,0 +1,20 @@
+[
+  {
+    "type": {{ operation_type | default("Register") | tojson }},
+    "parameter": {
+      "movement_name":                       {{ movement_name | tojson }},
+      "discard":                             {{ discard | default("0") | tojson }},
+      "orchestrator":                        {{ orchestrator | default(none) | tojson }},
+      "delay_timer":                         {{ delay_timer | default(none) | tojson }},
+      "host_specific_format":                {{ host_specific_format | default(none) | tojson }},
+      "header_section":                      {{ header_section | default(none) | tojson }},
+      "ansible_cfg":                         {{ ansible_cfg | default(none) | tojson }},
+      "optional_parameter":                  {{ optional_parameter | default(none) | tojson }},
+      "execution_environment":               {{ execution_environment | default(none) | tojson }},
+      "ansible_agent_execution_environment": {{ ansible_agent_execution_environment | default(none) | tojson }},
+      "ansibel_builder_options":             {{ ansibel_builder_options | default(none) | tojson }},
+      "winrm_connection":                    {{ winrm_connection | default(none) | tojson }},
+      "remarks":                             {{ remarks | default(none) | tojson }}
+    }
+  }
+]

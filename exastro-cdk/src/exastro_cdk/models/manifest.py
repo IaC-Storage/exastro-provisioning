@@ -8,6 +8,7 @@ class MovementModel:
 
     name: str
     description: str = ""
+    orchestrator: str = "ansible_legacy"
 
 
 @dataclass
