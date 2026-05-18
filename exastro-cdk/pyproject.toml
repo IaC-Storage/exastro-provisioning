@@ -57,6 +57,7 @@ addopts = "-ra -q"
 testpaths = [
     "tests",
 ]
+env_files = ["tests/.env"]
 filterwarnings = [
     # pyiceberg ライブラリ内部の非推奨警告を無視する
     "ignore::DeprecationWarning:pyiceberg.*",
