@@ -1,10 +1,13 @@
 # exastro-cdk/src/exastro_cdk/core/engine.py
 from pathlib import Path
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from jinja2 import Environment, FileSystemLoader
 
+from exastro_cdk.core.config import ExastroConfig, load_config
 from exastro_cdk.models.manifest import ManifestModel, MovementModel
+from exastro_cdk.services.ita_client import ITAClient
+from exastro_cdk.services.token import fetch_access_token
 
 
 class CDKEngine:
@@ -45,8 +48,9 @@ class CDKEngine:
         # 3. ローカルディレクトリ(Ansible Roles)の作成
         self._scaffold_local_files(manifest_data)
 
-        # 4. ITAへの初期登録 (必要に応じて)
-        # self.sync_initial_ita_structure(manifest_data)
+        # 4. ITAへの初期登録
+        config = load_config()
+        self._sync_initial_ita_structure(manifest_data, config)
 
     def _create_manifest(self, workspace_id: str, conductor_name: str) -> None:
         """テンプレートからマニフェストファイルを生成します.
@@ -87,6 +91,42 @@ class CDKEngine:
             conductor=data.get("conductor", {}),
             movements=movements,
         )
+
+    def _sync_initial_ita_structure(
+        self, manifest: ManifestModel, config: ExastroConfig
+    ) -> None:
+        """ManifestのMovement定義をITAに一括登録する.
+
+        Args:
+            manifest: バリデーション済みの ManifestModel
+            config: 環境変数から読み込んだ ExastroConfig
+
+        Raises:
+            ConfigurationError: 必須環境変数が未設定の場合
+            requests.HTTPError: ITA APIがエラーを返した場合
+        """
+        access_token = fetch_access_token(
+            config.base_url, config.organization, config.refresh_token
+        )
+
+        # manifest.workspace_id が設定されていればITAターゲットとして優先
+        workspace = manifest.workspace_id or config.workspace
+
+        client = ITAClient(
+            base_url=config.base_url,
+            organization_id=config.organization,
+            workspace_id=workspace,
+            access_token=access_token,
+        )
+
+        registered: list[str] = []  # Task 2-b で movement_id を収集予定
+        for movement in manifest.movements:
+            client.create_movement(movement)
+            registered.append(movement.name)
+
+        print(f"登録完了: {len(registered)} 件のMovementをITAに登録しました。")
+        for name in registered:
+            print(f"  - {name}")
 
     def _scaffold_local_files(self, manifest: ManifestModel) -> None:
         """マニフェストに基づいてローカルのディレクトリ構造を生成します."""

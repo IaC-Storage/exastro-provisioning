@@ -1,17 +1,11 @@
-{#
-  TODO: Columns for ansible_role (v2.7) are UNVERIFIED.
-  Confirm writable columns by running:
-    GET /api/{org}/workspaces/{ws}/ita/menu/movement_list_ansible_role/info/column/
-  Then add all writable columns (excluding movement_id, last_update_date_time, last_updated_user).
-#}
 [
   {
     "type": {{ operation_type | default("Register") | tojson }},
     "parameter": {
-      "movement_name": {{ movement_name | tojson }},
-      "discard":       {{ discard | default("0") | tojson }},
-      "orchestrator":  {{ orchestrator | default(none) | tojson }},
-      "remarks":       {{ remarks | default(none) | tojson }}
+      "movement_name":        {{ movement_name | tojson }},
+      "discard":              {{ discard | default("0") | tojson }},
+      "host_specific_format": {{ host_specific_format | tojson }},
+      "remarks":              {{ remarks | default(none) | tojson }}
     }
   }
 ]

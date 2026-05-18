@@ -13,9 +13,13 @@ movements:
   {%- for movement in movements %}
   - name: "{{ movement.name }}"
     description: "{{ movement.description }}"
+    orchestrator: "ansible_role"       # ansible_role のみサポート (ansible_legacy は TODO)
+    host_specific_format: "IP"         # "IP" のみサポート (ホスト名は TODO)
   {%- endfor %}
 {%- else %}
   # デフォルトのサンプルMovement
   - name: "sample_movement"
     description: "サンプルムーブメント（ここを編集してください）"
+    orchestrator: "ansible_role"
+    host_specific_format: "IP"
 {%- endif %}
