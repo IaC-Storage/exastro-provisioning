@@ -9,7 +9,7 @@ from exastro_cdk.core.engine import CDKEngine
 from exastro_cdk.models.manifest import ManifestModel, MovementModel
 
 _DUMMY_CONFIG = ExastroConfig(
-    base_url="http://ita.example.com",
+    base_url="http://localhost:30080",
     organization="test-org",
     workspace="test-ws",
     refresh_token="dummy-refresh",

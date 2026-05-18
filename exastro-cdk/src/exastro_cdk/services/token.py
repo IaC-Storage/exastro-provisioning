@@ -5,7 +5,7 @@ def fetch_access_token(base_url: str, organization: str, refresh_token: str) -> 
     """リフレッシュトークンを使ってアクセストークンを取得する.
 
     Args:
-        base_url: Exastro ベースURL (例: http://192.168.10.70:80)
+        base_url: Exastro ベースURL (例: http://localhost:30080)
         organization: オーガナイゼーションID (Keycloak realm名として使用)
         refresh_token: 長期有効なリフレッシュトークン
 
