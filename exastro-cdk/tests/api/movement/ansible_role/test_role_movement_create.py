@@ -1,4 +1,4 @@
-"""Movement(Ansible Role) 作成 API の学習用テスト.
+"""Movement(Ansible Role) 作成 / 削除 API の学習用テスト.
 
 =================================
 
@@ -19,7 +19,12 @@
   1. info/column/ でフィールド名を確認する
   2. そのフィールドを使って Movement を Register（新規作成）する
   3. レスポンスの result が "000-00000" であることを確認する（成功判定）
+
+手動廃止テストの実行方法:
+  pytest -m manual --movement-id=<廃止したい movement_id>
 """
+
+import pytest
 
 # テスト対象のメニュー名（環境に合わせて変更してください）
 MOVEMENT_MENU = "movement_list_ansible_role"
@@ -168,6 +173,71 @@ class TestMovementCreate:
         assert body.get("result") == "000-00000", f"Bulk register failed: {body}"
 
 
+@pytest.fixture(scope="module")
+def discard_response(api_client, ita_url, movement_id_from_cli):
+    """廃止 API を1回だけ呼び出し、レスポンスをキャッシュする.
+
+    TestMovementDiscard の各テストはこの fixture を共有し、
+    同じ movement_id への廃止リクエストを重複して送らないようにする。
+    """
+    movement = _fetch_movement_by_id(api_client, ita_url, movement_id_from_cli)
+    url = ita_url("menu", MOVEMENT_MENU, "maintenance", "all")
+    payload = _build_discard_payload(
+        movement_id_from_cli, movement["last_update_date_time"]
+    )
+    resp = api_client.post(url, json=payload)
+    print(
+        f"\n[DISCARD] movement_id={movement_id_from_cli}"
+        f" → status={resp.status_code} result={resp.json().get('result')}"
+    )
+    return resp
+
+
+@pytest.mark.manual
+class TestMovementDiscard:
+    """【手動実行専用】maintenance/all/ API で Movement を廃止（discard フラグを 1 に更新）する.
+
+    実行方法:
+      pytest -m manual --movement-id=<廃止したい movement_id>
+
+    廃止対象の movement_id は filter API や ITA の画面から事前に確認してください。
+
+    テストの流れ:
+      1. filter API で movement_id を検索し last_update_date_time を取得する（discard_response fixture）
+      2. maintenance/all/ に type=Update, discard=1 で送信する（discard_response fixture、1回のみ）
+      3. 各テストは同じレスポンスを検証する
+      4. flag_verified テストで filter API を再取得し discard フラグを確認する
+    """
+
+    def test_discard_movement_status_200(self, discard_response):
+        """廃止リクエストが 200 を返すこと."""
+        assert discard_response.status_code == 200, (
+            f"Expected 200, got {discard_response.status_code}\n{discard_response.text}"
+        )
+
+    def test_discard_movement_result_ok(self, discard_response):
+        """廃止の result が "000-00000"（成功）であること."""
+        body = discard_response.json()
+        assert body.get("result") == "000-00000", (
+            f"Unexpected result: {body.get('result')}\nfull response: {body}"
+        )
+
+    def test_discard_movement_flag_verified(
+        self, api_client, ita_url, movement_id_from_cli, discard_response
+    ):
+        """廃止後に filter API で取得すると discard フラグが "1" になっていること.
+
+        （Update 後の状態を filter で検証する学習テスト）
+        discard_response に依存することで、廃止が完了した後に実行されることを保証する。
+        """
+        movement = _fetch_movement_by_id(api_client, ita_url, movement_id_from_cli)
+        discard_value = movement.get("discard")
+        print(f"\n[VERIFY] movement_id={movement_id_from_cli} discard={discard_value}")
+        assert discard_value == "1", (
+            f"discard フラグが '1' になっていません。現在の値: {discard_value!r}"
+        )
+
+
 # ── ペイロードビルダー（可読性のために分離） ────────────────────────────────
 
 
@@ -189,3 +259,35 @@ def _build_register_entry(movement_name: str) -> dict:
 def _build_register_payload(movement_name: str) -> list:
     """maintenance/all に渡すリスト形式のペイロードを返す."""
     return [_build_register_entry(movement_name)]
+
+
+def _fetch_movement_by_id(api_client, ita_url, movement_id: str) -> dict:
+    """Filter API で movement_id を検索し parameter dict を返す.
+
+    見つからない場合は pytest.skip() でテストをスキップする。
+    """
+    url = ita_url("menu", MOVEMENT_MENU, "filter")
+    resp = api_client.post(
+        url + "?file=no", json={"movement_id": {"LIST": [movement_id]}}
+    )
+    resp.raise_for_status()
+    items = resp.json().get("data") or []
+    if not items:
+        pytest.skip(
+            f"movement_id={movement_id} が見つかりません（既に削除済みか ID が誤り）"
+        )
+    return items[0]["parameter"]
+
+
+def _build_discard_payload(movement_id: str, last_update_date_time: str) -> list:
+    """廃止（discard フラグを 1 に更新）用のペイロードを返す."""
+    return [
+        {
+            "type": "Update",
+            "parameter": {
+                "movement_id": movement_id,
+                "discard": "1",
+                "last_update_date_time": last_update_date_time,
+            },
+        }
+    ]
