@@ -49,13 +49,13 @@ class TestMovementColumnInfo:
         )
 
     def test_get_column_list_has_data(self, api_client, ita_url):
-        """Data フィールドにカラム名のリストが入っていること."""
+        """Data フィールドにカラム名の辞書が入っていること."""
         url = ita_url("menu", MOVEMENT_MENU, "info", "column")
         resp = api_client.get(url)
         body = resp.json()
         columns = body.get("data")
-        assert isinstance(columns, list), f"data should be a list, got: {type(columns)}"
-        assert len(columns) > 0, "column list is empty"
+        assert isinstance(columns, dict), f"data should be a dict, got: {type(columns)}"
+        assert len(columns) > 0, "column dict is empty"
 
     def test_get_column_list_contains_movement_name(self, api_client, ita_url):
         """movement_name フィールドがカラム一覧に含まれること.
@@ -64,7 +64,7 @@ class TestMovementColumnInfo:
         """
         url = ita_url("menu", MOVEMENT_MENU, "info", "column")
         resp = api_client.get(url)
-        columns = resp.json().get("data", [])
+        columns = resp.json().get("data", {})
         assert "movement_name" in columns, (
             f"'movement_name' not found in columns.\ncolumns: {columns}"
         )
@@ -76,10 +76,10 @@ class TestMovementColumnInfo:
         """
         url = ita_url("menu", MOVEMENT_MENU, "info", "column")
         resp = api_client.get(url)
-        columns = resp.json().get("data", [])
+        columns = resp.json().get("data", {})
         print(f"\n=== [{MOVEMENT_MENU}] のカラム一覧 ({len(columns)} 件) ===")
-        for col in columns:
-            print(f"  - {col}")
+        for key, label in columns.items():
+            print(f"  - {key}: {label}")
 
 
 class TestMovementCreate:
@@ -176,6 +176,7 @@ def _build_register_entry(movement_name: str) -> dict:
         "parameter": {
             "movement_name": movement_name,
             "discard": "0",
+            "host_specific_format": "IP",  # IPアドレスをホスト特定情報として使用する例
             # 必要に応じて他フィールドを追加:
             # "remarks": None,
             # "ansible_use_tpf_vars": "1",

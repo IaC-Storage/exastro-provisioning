@@ -9,5 +9,5 @@ def test_init_command_args():
     """CLI引数が正しくエンジンに渡されるか（エラーにならないか）の疎通テスト."""
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["init", ".", "--manifest", "non-existent.yaml"])
-        # この時点ではファイルがないのでエラーになる設計なら、その挙動を確認
-        assert result.exit_code != 0
+        # manifest が存在しない場合はデフォルト manifest を生成して正常終了する
+        assert result.exit_code == 0
