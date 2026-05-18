@@ -8,7 +8,8 @@ class MovementModel:
 
     name: str
     description: str = ""
-    orchestrator: str = "ansible_legacy"
+    orchestrator: str = "ansible_role"
+    host_specific_format: str = "IP"  # "IP" or "ホスト名" (TODO)
 
 
 @dataclass
