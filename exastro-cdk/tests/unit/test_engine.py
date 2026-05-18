@@ -176,7 +176,9 @@ class TestSyncInitialItaStructure:
             engine._sync_initial_ita_structure(mock_manifest, _DUMMY_CONFIG)
 
         mock_fetch.assert_called_once_with(
-            "http://ita.example.com", "test-org", "dummy-refresh"
+            _DUMMY_CONFIG.base_url,
+            _DUMMY_CONFIG.organization,
+            _DUMMY_CONFIG.refresh_token,
         )
 
 
