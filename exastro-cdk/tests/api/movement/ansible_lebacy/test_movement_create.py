@@ -1,4 +1,4 @@
-"""Movement 作成 API の学習用テスト.
+"""Movement(Ansible Legacy) 作成 API の学習用テスト.
 
 =================================
 
