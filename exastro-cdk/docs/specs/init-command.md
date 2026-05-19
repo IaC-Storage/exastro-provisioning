@@ -1,3 +1,5 @@
+# init コマンド仕様
+
 ## 1. Why：コマンドの目的と価値
 このコマンドの最大の目的は、ITAのGUI画面を操作しなくても自動構築の設計を開始できる状態を作ることです。
 
@@ -27,3 +29,49 @@ Pydanticを用いた厳密な型定義により、以下のルールをチェッ
 * **命名規則**: Movement名は `[a-z0-9_]` のみ（Ansible Roleの規約に準拠）。
 * **構造の妥当性**: Conductor定義とMovementsリストの整合性。
 * **変数のプレフィックス**: 将来的な `build-schema` を見据え、変数名にRole名を付与する準備ができているか。
+
+---
+
+## 3. How：実行フロー
+
+### 第1回実行（`manifest.yaml` が存在しない場合）
+
+対話型セットアップで情報を収集し、`manifest.yaml` テンプレートを生成して終了。
+
+```bash
+$ exastro-cdk init
+# → manifest.yaml を生成（編集してから再実行）
+```
+
+### 第2回実行（`manifest.yaml` が存在する場合）
+
+`manifest.yaml` の内容に基づき、ローカルとExastro ITA両側にリソースを展開。
+
+```bash
+$ exastro-cdk init
+# ローカル: ansible/roles/<role_name>/ のディレクトリ構成を生成
+# Exastro:  Movement を登録し、横一列の Conductor を自動作成
+```
+
+### `--env-file` オプション
+
+`.env` ファイルから接続情報を読み込む場合に使用します。
+
+```bash
+$ exastro-cdk init --env-file .env
+```
+
+### 生成されるディレクトリ構造
+
+```
+project/
+├── manifest.yaml
+├── .gitignore
+└── ansible/
+    └── roles/
+        └── <role_name>/
+            ├── tasks/
+            │   └── main.yml
+            └── defaults/
+                └── main.yml
+```

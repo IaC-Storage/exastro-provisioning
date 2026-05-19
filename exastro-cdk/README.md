@@ -116,115 +116,9 @@ graph BT
 
 ## 2. ユーザーフロー
 
-### CLIコマンドインタフェース
+CLIコマンドの一覧・各コマンドの詳細・開発サイクルは [docs/user_flow.md](docs/user_flow.md) を参照してください。
 
-| コマンド | 概要 | 機能 |
-| :--- | :--- | :--- |
-| **`exastro-cdk init`** | プロジェクト初期化 | マニフェストファイルの作成、マニフェストファイルベースの標準ディレクトリ構造の生成 |
-| **`exastro-cdk sync`** | 定義と環境の同期 | REST APIを使ったリソース差分適用（create/update）、マニフェストファイルから削除されたリソースを自動削除（delete）、適用前の差分確認 |
-| **`exastro-cdk verify`** | 検証 | マニフェストファイルの構文チェック及びスキーマ検証 |
-| **`exastro-cdk test`** | テスト実行 | 指定したシナリオでのConductor/Movementの実行、テスト実行結果・ステータス表示 |
-| **`exastro-cdk build`** | カートリッジ化 | マニフェストファイルとITAコンポーネントのバリデーション、ITA標準カートリッジ（kym）へのパッケージング |
-| **`exastro-cdk search`** | 標準Playbook素材の検索 | 標準Playbook素材をキーワードやタグで検索・インポート |
-
----
-
-製品開発部門の開発者は以下のサイクルで ITA 上のジョブフローを構築します。
-
-```
-① manifest.yaml を記述
-        ↓
-② exastro-cdk init    ← Ansible Role雛形の生成 + ITA への Movement/Conductor 登録
-        ↓
-   [Role 開発: tasks/main.yml, defaults/main.yml を実装]
-        ↓
-③ exastro-cdk verify  ← マニフェストファイルの構文チェック・スキーマ検証
-        ↓
-④ exastro-cdk sync    ← ロールパッケージのアップロード + 差分の同期（削除も含む）
-        ↓
-⑤ exastro-cdk test   ← 指定シナリオで Conductor/Movement を実行・結果確認
-        ↓
-⑥ exastro-cdk build  ← ITA標準カートリッジ（kym）へのパッケージング
-```
-
-> 標準Playbook素材を再利用する場合は `exastro-cdk search` でキーワード・タグ検索してインポートできます。
-
-### Step 1: `init` — プロジェクト初期化（2段階）
-
-**第1回実行:** `manifest.yaml` が存在しない場合、テンプレートを自動生成して終了。
-
-```bash
-$ exastro-cdk init
-# → manifest.yaml を生成（編集してから再実行）
-```
-
-**第2回実行:** `manifest.yaml` の内容に基づいてローカルとExastro両側にリソースを展開。
-
-```bash
-$ exastro-cdk init
-# ローカル: ansible/roles/<role_name>/ のディレクトリ構成を生成
-# Exastro:  Movement を登録し、横一列の Conductor を自動作成
-```
-
-### Step 2: `verify` — 事前検証
-
-`manifest.yaml` の構文チェックとスキーマ検証を行います。`sync` や `build` の前に実行することで問題を早期に検出できます。
-
-```bash
-$ exastro-cdk verify
-# → manifest.yaml のスキーマ検証・構文チェックを実行して結果を報告
-```
-
-### Step 3: `sync` — 宣言的同期
-
-`manifest.yaml` とExastro ITA上の実態の差分を検出し、作成・更新・削除を適用します。
-
-```bash
-$ exastro-cdk sync
-```
-
-リソースの操作順序（依存関係に従う）:
-
-```
-Movement 作成/更新
-    ↓
-ロールパッケージ アップロード
-    ↓
-Movement-ロール 紐付け（交差テーブル）
-    ↓
-Conductor 作成/更新
-    ↓
-代入値自動登録設定 更新
-    ↓
-マニフェストから削除されたリソースの自動削除（Pruning）
-```
-
-### Step 4: `test` — テスト実行
-
-指定したシナリオでConductor/Movementを実行し、結果・ステータスを確認します。
-
-```bash
-$ exastro-cdk test
-# → Conductor/Movement を実行し、テスト結果とステータスをレポート出力
-```
-
-### Step 5: `build` — カートリッジ化
-
-検証済みのコンポーネントをITA標準カートリッジ（kymファイル）としてパッケージングします。
-
-```bash
-$ exastro-cdk build
-# → マニフェストとITAコンポーネントをバリデーション後、kymファイルへパッケージング
-```
-
-### `search` — 標準Playbook素材の検索・インポート
-
-標準Playbook素材をキーワードやタグで検索し、プロジェクトへインポートします。
-
-```bash
-$ exastro-cdk search <keyword>
-# → 標準Playbookをキーワード・タグで検索してインポート
-```
+`init` コマンドの詳細仕様は [docs/specs/init-command.md](docs/specs/init-command.md) を参照してください。
 
 ---
 
@@ -244,17 +138,7 @@ $ exastro-cdk search <keyword>
 
 ## 4. 利用の前提条件
 
-- オーガナイゼーションは作成済みであること
-- リフレッシュトークンは発行済みであること
-
-### 環境変数
-
-```bash
-export EXASTRO_BASE_URL=https://your-exastro-instance
-export EXASTRO_REFRESH_TOKEN=your_refresh_token
-export EXASTRO_ORGANIZATION_ID=your_org_id
-export EXASTRO_WORKSPACE_ID=your_workspace_id
-```
+前提条件・環境変数の設定については [docs/user_flow.md](docs/user_flow.md) を参照してください。
 
 ---
 
