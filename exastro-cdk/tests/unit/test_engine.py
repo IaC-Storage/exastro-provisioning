@@ -218,6 +218,119 @@ movements:
         assert manifest_arg.movements[0].name == "role_a"
 
 
+class TestLoadAndValidate:
+    """_load_and_validate のテスト."""
+
+    def test_loads_minimal_manifest(self, temp_project_dir: Path) -> None:
+        """movements/conductor なしの最小 manifest を正常にロードできる."""
+        manifest_content = "workspace_id: minimal-ws\n"
+        manifest_path = temp_project_dir / "manifest.yaml"
+        manifest_path.write_text(manifest_content, encoding="utf-8")
+
+        engine = CDKEngine(temp_project_dir)
+        result = engine._load_and_validate(manifest_path)
+
+        assert result.workspace_id == "minimal-ws"
+        assert result.movements == []
+        assert result.conductor == {}
+
+    def test_uses_default_orchestrator(self, temp_project_dir: Path) -> None:
+        """Orchestrator 未指定の Movement は デフォルト値 'ansible_role' になる."""
+        manifest_content = """\
+workspace_id: ws-1
+movements:
+  - name: my_role
+    description: テスト
+"""
+        manifest_path = temp_project_dir / "manifest.yaml"
+        manifest_path.write_text(manifest_content, encoding="utf-8")
+
+        engine = CDKEngine(temp_project_dir)
+        result = engine._load_and_validate(manifest_path)
+
+        assert result.movements[0].orchestrator == "ansible_role"
+
+    def test_uses_default_host_specific_format(self, temp_project_dir: Path) -> None:
+        """host_specific_format 未指定の Movement はデフォルト値 'IP' になる."""
+        manifest_content = """\
+workspace_id: ws-1
+movements:
+  - name: my_role
+"""
+        manifest_path = temp_project_dir / "manifest.yaml"
+        manifest_path.write_text(manifest_content, encoding="utf-8")
+
+        engine = CDKEngine(temp_project_dir)
+        result = engine._load_and_validate(manifest_path)
+
+        assert result.movements[0].host_specific_format == "IP"
+
+    def test_loads_multiple_movements(self, temp_project_dir: Path) -> None:
+        """複数の Movement を正しくロードできる."""
+        manifest_content = """\
+workspace_id: ws-multi
+movements:
+  - name: role_a
+    orchestrator: ansible_legacy
+  - name: role_b
+    orchestrator: ansible_role
+  - name: role_c
+    orchestrator: terraform_cloud_ep
+"""
+        manifest_path = temp_project_dir / "manifest.yaml"
+        manifest_path.write_text(manifest_content, encoding="utf-8")
+
+        engine = CDKEngine(temp_project_dir)
+        result = engine._load_and_validate(manifest_path)
+
+        assert len(result.movements) == 3
+        assert result.movements[0].name == "role_a"
+        assert result.movements[1].orchestrator == "ansible_role"
+        assert result.movements[2].orchestrator == "terraform_cloud_ep"
+
+
+class TestRunInitProcessWithExternalManifest:
+    """`--manifest` オプション（外部 manifest）を使った run_init_process のテスト."""
+
+    def test_copies_external_manifest_to_project_dir(
+        self, temp_project_dir: Path, tmp_path: Path
+    ) -> None:
+        """外部 manifest が指定された場合、プロジェクトディレクトリにコピーされる."""
+        external_manifest = tmp_path / "external_manifest.yaml"
+        external_manifest.write_text(
+            "workspace_id: ext-ws\nconductor: {}\nmovements: []\n", encoding="utf-8"
+        )
+
+        engine = CDKEngine(temp_project_dir)
+        with (
+            patch("exastro_cdk.core.engine.load_config", return_value=_DUMMY_CONFIG),
+            patch.object(engine, "_sync_initial_ita_structure"),
+        ):
+            engine.run_init_process(manifest_path=external_manifest)
+
+        copied = temp_project_dir / "manifest.yaml"
+        assert copied.exists()
+        assert "ext-ws" in copied.read_text(encoding="utf-8")
+
+    def test_external_manifest_triggers_stage2(
+        self, temp_project_dir: Path, tmp_path: Path
+    ) -> None:
+        """外部 manifest 指定時は Stage 2（ITA 登録）まで実行される."""
+        external_manifest = tmp_path / "ext.yaml"
+        external_manifest.write_text(
+            "workspace_id: ext-ws\nconductor: {}\nmovements: []\n", encoding="utf-8"
+        )
+
+        engine = CDKEngine(temp_project_dir)
+        with (
+            patch("exastro_cdk.core.engine.load_config", return_value=_DUMMY_CONFIG),
+            patch.object(engine, "_sync_initial_ita_structure") as mock_sync,
+        ):
+            engine.run_init_process(manifest_path=external_manifest)
+
+        mock_sync.assert_called_once()
+
+
 class TestLoadConfig:
     """load_config のテスト."""
 
