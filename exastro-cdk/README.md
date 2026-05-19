@@ -114,7 +114,75 @@ graph BT
 
 ---
 
-## 2. ユーザーフロー
+## 2. クイックスタート
+
+### インストール
+
+Python 3.11 以上が必要です。
+
+```bash
+# 仮想環境を作成・有効化（推奨）
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# パッケージをインストール
+pip install -e .
+```
+
+インストール確認:
+
+```bash
+exastro-cdk --help
+```
+
+### 環境変数の設定
+
+Exastro ITA への接続情報を環境変数またはプロジェクトルートの `.env` ファイルで設定します。
+
+```bash
+# .env ファイルを作成
+cat <<EOF > .env
+EXASTRO_BASE_URL=https://your-exastro-instance
+EXASTRO_REFRESH_TOKEN=your_refresh_token
+EXASTRO_ORGANIZATION_ID=your_org_id
+EXASTRO_WORKSPACE_ID=your_workspace_id
+EOF
+```
+
+| 変数名 | 説明 |
+| :--- | :--- |
+| `EXASTRO_BASE_URL` | Exastro ITA のベースURL |
+| `EXASTRO_REFRESH_TOKEN` | ITA のリフレッシュトークン（発行済みであること） |
+| `EXASTRO_ORGANIZATION_ID` | 対象オーガナイゼーションID |
+| `EXASTRO_WORKSPACE_ID` | 対象ワークスペースID |
+
+### 基本的な使い方
+
+```bash
+# 1. manifest.yaml を作成（初回はテンプレートを自動生成）
+exastro-cdk init
+
+# 2. manifest.yaml を編集後、Ansible Role 雛形と ITA リソースを登録
+exastro-cdk init
+
+# 3. マニフェストの構文チェック
+exastro-cdk verify
+
+# 4. ロールパッケージをアップロードして ITA と同期
+exastro-cdk sync
+
+# 5. テストシナリオで Conductor/Movement を実行・確認
+exastro-cdk test
+
+# 6. ITA 標準カートリッジ（kym）としてパッケージング
+exastro-cdk build
+```
+
+詳細なユーザーフローは「3. ユーザーフロー」セクションを参照してください。
+
+---
+
+## 3. ユーザーフロー
 
 CLIコマンドの一覧・各コマンドの詳細・開発サイクルは [docs/user_flow.md](docs/user_flow.md) を参照してください。
 
