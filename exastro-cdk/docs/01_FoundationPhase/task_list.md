@@ -25,6 +25,7 @@
 
 ### 3. `conductor.py` の実装
 
+- [ ] 3-a. 学習用テスト (`tests/api/conductor/`) を作成し、Conductor登録の動作検証環境を整備
 - [ ] 3-a. `ConductorModel` を `models/manifest.py` に定義
 - [ ] 3-b. `manifest.yaml` に `conductor` ブロックのフィールドを反映 (`ManifestModel` 更新)
 - [ ] 3-c. `ConductorResource.create()` の ITA API エンドポイント・ボディマッピングを実装
