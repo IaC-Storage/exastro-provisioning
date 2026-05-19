@@ -9,12 +9,18 @@ from dotenv import load_dotenv
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-    """コマンドラインオプション --movement-id を追加する."""
+    """コマンドラインオプションを追加する."""
     parser.addoption(
         "--movement-id",
         action="store",
         default=None,
         help="削除対象の movement_id（手動削除テスト用）",
+    )
+    parser.addoption(
+        "--conductor-id",
+        action="store",
+        default=None,
+        help="廃止対象の conductor_class_id（手動廃止テスト用）",
     )
 
 

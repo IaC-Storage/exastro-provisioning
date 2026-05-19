@@ -25,17 +25,46 @@
 
 ### 3. `conductor.py` の実装
 
-- [ ] 3-a. `ConductorModel` を `models/manifest.py` に定義
-- [ ] 3-b. `manifest.yaml` に `conductor` ブロックのフィールドを反映 (`ManifestModel` 更新)
-- [ ] 3-c. `ConductorResource.create()` の ITA API エンドポイント・ボディマッピングを実装
-- [ ] 3-d. `conductor.py` の TODO を解消（`dict` から `ConductorModel` に型切り替え）
-- [ ] 3-e. Movement先作成 → Conductor作成の依存関係制御を実装
+- [ ] 3-a. 学習用テスト (`tests/api/conductor/`) を作成し、Conductor登録の動作検証環境を整備
+- [ ] 3-b. `ConductorModel` を `models/manifest.py` に定義
+- [ ] 3-c. `manifest.yaml` に `conductor` ブロックのフィールドを反映 (`ManifestModel` 更新)
+- [ ] 3-d. `ConductorResource.create()` の ITA API エンドポイント・ボディマッピングを実装
+- [ ] 3-e. `conductor.py` の TODO を解消（`dict` から `ConductorModel` に型切り替え）
+- [ ] 3-f. Movement先作成 → Conductor作成の依存関係制御を実装
 
 ### 4. `exastro-cdk sync` でConductor作成ができる
 
 - [ ] 4-a. `cli/apply.py` に `sync` コマンドを実装
 - [ ] 4-b. `engine.py` に `run_sync_process()` を実装（Movement → Conductor の順で ITA 登録）
 - [ ] 4-c. 冪等性の初期対応（既存リソースのスキップ or 上書き判定）
+
+---
+
+## 設計メモ
+
+### Conductor の N Movement 対応方針
+
+`manifest.yaml` は「1 Conductor + N Movements」構造を前提としている。
+実装方針は **全 Movement を直列チェーンで繋いだ 1 Conductor を生成する**。
+
+```
+Start → Movement[0] → Movement[1] → ... → Movement[N-1] → End
+```
+
+ノード/エッジは Movement リストから動的生成する：
+
+- `node-1`: start（out: terminal-1）
+- `node-3` 〜 `node-(N+2)`: movement ノード（各 in/out terminal をインデックスから採番）
+- `node-2`: end（in: terminal-2）
+- `line-1` 〜 `line-(N+1)`: 隣接ノードを順番に接続
+- X 座標はインデックス × オフセット（約 300px）で計算
+
+`ConductorResource.create()` は単一 Movement ではなく `list[dict]` を受け取る設計に変更する。
+
+**事前確認事項**: `orchestra_id` は Movement ごとに異なる可能性がある（Ansible Legacy Role=`"3"` など）。
+`movement_list_*/filter` のレスポンスに含まれるか確認しておくと 3-d の実装がスムーズになる。
+
+**着手順序**: 依存関係上、2-b（`movement_id` の返却対応）から始めるのが最短経路。
 
 ---
 
