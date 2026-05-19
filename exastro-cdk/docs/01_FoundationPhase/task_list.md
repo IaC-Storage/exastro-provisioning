@@ -4,8 +4,8 @@
 
 | コンポーネント | 状態 | 備考 |
 |---|---|---|
-| `exastro-cdk init` | 仮実装済み | Step4(ITA登録)はコメントアウト中 |
-| `movement.py` | 実装済み | `MovementResource.create()` 動作可能 |
+| `exastro-cdk init` | 実装完了 | Movement 登録まで動作確認済み（単体テスト追加済み） |
+| `movement.py` | 実装済み | `MovementResource.create()` 動作可能・単体テスト追加済み |
 | `conductor.py` | スタブのみ | URL/ボディマッピング未実装、`ConductorModel`未定義 |
 | `apply.py` (sync) | 空 | `app = typer.Typer()` のみ |
 
@@ -15,12 +15,12 @@
 
 ### 1. `exastro-cdk init` の完成 (仮実装 → 本実装)
 
-- [ ] 1-a. ITA初期登録を `engine.py` の `run_init_process` Step4 に実装（コメントアウト箇所の解除・実装）
-- [ ] 1-b. `ita_client.py` の `ITAClient` との接続確認・整合
+- [x] 1-a. ITA初期登録を `engine.py` の `run_init_process` Step4 に実装（完了: PR #2）
+- [x] 1-b. `ita_client.py` の `ITAClient` との接続確認・整合（完了: 単体テストで確認 PR #5）
 
 ### 2. `movement.py` の実装完成
 
-- [ ] 2-a. 学習用テスト (`tests/api/movement/`) をベースに `MovementResource` の動作検証
+- [x] 2-a. 学習用テスト (`tests/api/movement/`) をベースに `MovementResource` の動作検証（完了: `tests/unit/test_movement_resource.py` 追加 PR #5）
 - [ ] 2-b. `movement_id` の返却対応（Conductor側で参照するため）
 
 ### 3. `conductor.py` の実装
