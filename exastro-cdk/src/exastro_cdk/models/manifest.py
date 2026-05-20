@@ -10,6 +10,7 @@ class MovementModel:
     description: str = ""
     orchestrator: str = "ansible_role"
     host_specific_format: str = "IP"  # "IP" or "ホスト名" (TODO)
+    movement_id: str | None = None
 
 
 @dataclass

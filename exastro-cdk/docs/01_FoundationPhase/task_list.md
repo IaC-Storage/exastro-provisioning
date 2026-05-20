@@ -21,7 +21,7 @@
 ### 2. `movement.py` の実装完成
 
 - [x] 2-a. 学習用テスト (`tests/api/movement/`) をベースに `MovementResource` の動作検証（完了: `tests/unit/test_movement_resource.py` 追加 PR #5）
-- [ ] 2-b. `movement_id` の返却対応（Conductor側で参照するため）
+- [x] 2-b. `movement_id` の返却対応（Conductor側で参照するため）（完了: PR #8）
 
 ### 3. `conductor.py` の実装
 

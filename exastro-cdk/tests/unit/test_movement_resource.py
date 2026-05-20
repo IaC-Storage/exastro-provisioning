@@ -17,6 +17,10 @@ def _make_resource(mock_session: MagicMock) -> MovementResource:
 def _make_mock_session() -> MagicMock:
     session = MagicMock(spec=requests.Session)
     session.post.return_value.raise_for_status = MagicMock()
+    session.post.return_value.json.return_value = {
+        "result": "000-00000",
+        "data": [{"parameter": {"movement_id": "test-uuid-1234"}}],
+    }
     return session
 
 
@@ -110,3 +114,13 @@ class TestMovementResourceCreate:
         body = mock_session.post.call_args.kwargs["json"]
         param = body[0]["parameter"]
         assert param["remarks"] == "テスト説明"
+
+    def test_returns_movement_id_from_response(self) -> None:
+        """POST レスポンスから movement_id を抽出して返却する."""
+        mock_session = _make_mock_session()
+        resource = _make_resource(mock_session)
+        movement = MovementModel(name="os_setup")
+
+        result = resource.create(movement)
+
+        assert result == "test-uuid-1234"
