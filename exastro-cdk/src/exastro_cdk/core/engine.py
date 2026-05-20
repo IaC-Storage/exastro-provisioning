@@ -119,14 +119,15 @@ class CDKEngine:
             access_token=access_token,
         )
 
-        registered: list[str] = []  # Task 2-b で movement_id を収集予定
+        registered: list[tuple[str, str]] = []  # (name, movement_id)
         for movement in manifest.movements:
-            client.create_movement(movement)
-            registered.append(movement.name)
+            movement_id = client.create_movement(movement)
+            movement.movement_id = movement_id
+            registered.append((movement.name, movement_id))
 
         print(f"登録完了: {len(registered)} 件のMovementをITAに登録しました。")
-        for name in registered:
-            print(f"  - {name}")
+        for name, mid in registered:
+            print(f"  - {name} (movement_id: {mid})")
 
     def _scaffold_local_files(self, manifest: ManifestModel) -> None:
         """マニフェストに基づいてローカルのディレクトリ構造を生成します."""

@@ -50,14 +50,17 @@ class MovementResource:
             keep_trailing_newline=True,
         )
 
-    def create(self, movement: MovementModel) -> None:
-        """Movement を ITA に登録する.
+    def create(self, movement: MovementModel) -> str:
+        """Movement を ITA に登録し、払い出された movement_id を返す.
 
         Args:
             movement: 登録する Movement のモデル
 
+        Returns:
+            ITA が払い出した movement_id（UUID文字列）
+
         Raises:
-            KeyError: movement.orchestrator が未知のオーケストレータ種別の場合
+            KeyError: movement.orchestrator が未知のオーケストレータ種別の場合、またはレスポンスに movement_id が含まれない場合
             requests.HTTPError: APIがエラーレスポンスを返した場合
         """
         orchestrator = getattr(movement, "orchestrator", "ansible_legacy")
@@ -85,3 +88,5 @@ class MovementResource:
         body = json.loads(rendered)
         response = self._session.post(url, json=body)
         response.raise_for_status()
+        data = response.json().get("data") or []
+        return data[0]["parameter"]["movement_id"]

@@ -42,9 +42,9 @@ class ITAClient:
         self.movement = MovementResource(session, ita_base_url)
         self.conductor = ConductorResource(session, ita_base_url)
 
-    def create_movement(self, movement: MovementModel) -> None:
-        """MovementをITAに登録する."""
-        self.movement.create(movement)
+    def create_movement(self, movement: MovementModel) -> str:
+        """MovementをITAに登録し、払い出された movement_id を返す."""
+        return self.movement.create(movement)
 
     def create_conductor(self, conductor: dict) -> None:
         """ConductorをITAに登録する."""
