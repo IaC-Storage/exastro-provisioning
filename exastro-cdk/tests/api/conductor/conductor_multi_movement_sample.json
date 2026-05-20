@@ -1,0 +1,141 @@
+{
+	"config": {
+		"nodeNumber": 5,
+		"terminalNumber": 8,
+		"edgeNumber": 3,
+		"editorVersion": "2.0.0"
+	},
+	"conductor": {
+		"id": null,
+		"conductor_name": "Test Conductor Multi Movement 01",
+		"last_update_date_time": null,
+		"note": "2 Movement 直列チェーンのサンプル",
+		"notice_info": {},
+		"grid_snap": true,
+		"movement_width": "auto",
+		"movement_white_space": "wrap"
+	},
+	"node-1": {
+		"type": "start",
+		"id": "node-1",
+		"terminal": {
+			"terminal-1": {
+				"id": "terminal-1",
+				"type": "out",
+				"x": 7657,
+				"y": 8000,
+				"targetNode": "node-3",
+				"edge": "line-1"
+			}
+		},
+		"x": 7475,
+		"y": 7971,
+		"w": 199.047,
+		"h": 58
+	},
+	"node-2": {
+		"type": "end",
+		"id": "node-2",
+		"terminal": {
+			"terminal-2": {
+				"id": "terminal-2",
+				"type": "in",
+				"x": 8643,
+				"y": 8000,
+				"targetNode": "node-4",
+				"edge": "line-3"
+			}
+		},
+		"end_type": "6",
+		"x": 8625.953,
+		"y": 7971,
+		"w": 199.047,
+		"h": 58
+	},
+	"node-3": {
+		"type": "movement",
+		"id": "node-3",
+		"terminal": {
+			"terminal-5": {
+				"id": "terminal-5",
+				"type": "in",
+				"x": 7867,
+				"y": 8000,
+				"targetNode": "node-1",
+				"edge": "line-1"
+			},
+			"terminal-6": {
+				"id": "terminal-6",
+				"type": "out",
+				"x": 8097,
+				"y": 8000,
+				"targetNode": "node-4",
+				"edge": "line-2"
+			}
+		},
+		"movement_id": "<<REPLACE_ME_0>>",
+		"skip_flag": 0,
+		"operation_id": null,
+		"orchestra_id": "3",
+		"movement_name": "movement-0",
+		"x": 7850,
+		"y": 7971,
+		"w": 264.297,
+		"h": 58
+	},
+	"node-4": {
+		"type": "movement",
+		"id": "node-4",
+		"terminal": {
+			"terminal-7": {
+				"id": "terminal-7",
+				"type": "in",
+				"x": 8167,
+				"y": 8000,
+				"targetNode": "node-3",
+				"edge": "line-2"
+			},
+			"terminal-8": {
+				"id": "terminal-8",
+				"type": "out",
+				"x": 8397,
+				"y": 8000,
+				"targetNode": "node-2",
+				"edge": "line-3"
+			}
+		},
+		"movement_id": "<<REPLACE_ME_1>>",
+		"skip_flag": 0,
+		"operation_id": null,
+		"orchestra_id": "3",
+		"movement_name": "movement-1",
+		"x": 8150,
+		"y": 7971,
+		"w": 264.297,
+		"h": 58
+	},
+	"line-1": {
+		"type": "edge",
+		"id": "line-1",
+		"outNode": "node-1",
+		"outTerminal": "terminal-1",
+		"inNode": "node-3",
+		"inTerminal": "terminal-5"
+	},
+	"line-2": {
+		"type": "edge",
+		"id": "line-2",
+		"outNode": "node-3",
+		"outTerminal": "terminal-6",
+		"inNode": "node-4",
+		"inTerminal": "terminal-7"
+	},
+	"line-3": {
+		"type": "edge",
+		"id": "line-3",
+		"outNode": "node-4",
+		"outTerminal": "terminal-8",
+		"inNode": "node-2",
+		"inTerminal": "terminal-2"
+	}
+}

@@ -298,6 +298,196 @@ class TestConductorCreate:
         print(json.dumps(resp.json(), ensure_ascii=False, indent=2))
 
 
+# ── Step3: filter/ で Conductor 一覧を取得 ──────────────────────────────────
+
+
+class TestConductorFilter:
+    """Step3: filter/ API の挙動を確認する.
+
+    3-d の ConductorResource.create() で既存 Conductor を検索する際に使う。
+    レスポンスのフィールド名・ネスト構造をここで把握しておく。
+    """
+
+    def test_filter_returns_200(self, api_client, ita_url):
+        """Filter API が 200 を返すこと."""
+        url = ita_url("menu", CONDUCTOR_MENU, "filter")
+        resp = api_client.post(url + "?file=no", json={})
+        assert resp.status_code == 200, (
+            f"Expected 200, got {resp.status_code}\n{resp.text}"
+        )
+
+    def test_filter_result_ok(self, api_client, ita_url):
+        """Filter レスポンスの result が "000-00000" であること."""
+        url = ita_url("menu", CONDUCTOR_MENU, "filter")
+        resp = api_client.post(url + "?file=no", json={})
+        body = resp.json()
+        assert body.get("result") == "000-00000", (
+            f"Unexpected result: {body.get('result')}\nfull response: {body}"
+        )
+
+    def test_filter_data_is_list(self, api_client, ita_url):
+        """Filter の data フィールドがリスト型であること."""
+        url = ita_url("menu", CONDUCTOR_MENU, "filter")
+        resp = api_client.post(url + "?file=no", json={})
+        data = resp.json().get("data")
+        assert isinstance(data, list), (
+            f"data should be a list, got: {type(data)}\nfull response: {resp.json()}"
+        )
+
+    def test_filter_print_response(self, api_client, ita_url):
+        """【学習用】filter レスポンスの先頭 1 件を表示する.
+
+        pytest -s で実行するとフィールド名・ネスト構造を確認できる。
+        """
+        import json
+
+        url = ita_url("menu", CONDUCTOR_MENU, "filter")
+        resp = api_client.post(url + "?file=no", json={})
+        data = resp.json().get("data") or []
+        print(f"\n=== [{CONDUCTOR_MENU}] filter レスポンス 先頭 1 件 ===")
+        if data:
+            print(json.dumps(data[0], ensure_ascii=False, indent=2))
+        else:
+            print("  (登録済み Conductor なし)")
+
+
+# ── Step4: movement filter で orchestra_id の有無を確認 ──────────────────────
+
+
+class TestOrchestraIdInMovementFilter:
+    """Step4: movement_list_*/filter レスポンスに orchestra_id が含まれるかを確認する.
+
+    設計メモの事前確認事項:
+      orchestra_id は Movement ごとに異なる可能性がある（Ansible Legacy Role=「3」など）。
+      movement_list_*/filter レスポンスに含まれれば 3-d の ConductorResource.create() で
+      orchestra_id を動的に取得できる。含まれない場合は xfail でマークし、
+      ハードコード方針を検討する材料にする。
+    """
+
+    def test_movement_filter_has_orchestra_id(self, api_client, ita_url):
+        """Movement filter レスポンスの parameter に orchestra_id が含まれること.
+
+        フィールドが存在しない場合は xfail（ハードコード方針の検討が必要）。
+        """
+        url = ita_url("menu", MOVEMENT_MENU_FOR_LOOKUP, "filter")
+        resp = api_client.post(
+            url + "?file=no",
+            json={"movement_name": {"LIST": [MOVEMENT_NAME_FOR_TEST]}},
+        )
+        resp.raise_for_status()
+        items = resp.json().get("data") or []
+        if not items:
+            pytest.skip(
+                f"Movement '{MOVEMENT_NAME_FOR_TEST}' が見つかりません。"
+                "ITA に登録済みの Movement 名を MOVEMENT_NAME_FOR_TEST に設定してください。"
+            )
+        parameter = items[0].get("parameter", {})
+        if "orchestra_id" not in parameter:
+            pytest.xfail(
+                "orchestra_id が movement filter レスポンスに含まれていません。"
+                "3-d では orchestra_id をハードコードする方針を検討してください。"
+            )
+        assert parameter["orchestra_id"], (
+            f"orchestra_id が空です。parameter: {parameter}"
+        )
+
+    def test_print_movement_filter_all_fields(self, api_client, ita_url):
+        """【学習用】movement filter レスポンスの全フィールドを表示する.
+
+        pytest -s で実行すると parameter の全キーを確認できる。
+        """
+        url = ita_url("menu", MOVEMENT_MENU_FOR_LOOKUP, "filter")
+        resp = api_client.post(
+            url + "?file=no",
+            json={"movement_name": {"LIST": [MOVEMENT_NAME_FOR_TEST]}},
+        )
+        resp.raise_for_status()
+        items = resp.json().get("data") or []
+        print(f"\n=== [{MOVEMENT_MENU_FOR_LOOKUP}] filter parameter フィールド一覧 ===")
+        if items:
+            parameter = items[0].get("parameter", {})
+            for key, value in parameter.items():
+                print(f"  - {key}: {value!r}")
+        else:
+            print(f"  (Movement '{MOVEMENT_NAME_FOR_TEST}' が見つかりません)")
+
+
+# ── Step5: 2 Movement 直列チェーンの Conductor を登録 ──────────────────────────
+
+
+class TestConductorMultiMovement:
+    """Step5: 2 Movement 直列チェーンの Conductor を登録する.
+
+    設計メモのノード採番ルールを実機で検証する:
+      node-1 (start)  → line-1 → node-3 (movement-0) → line-2 → node-4 (movement-1) → line-3 → node-2 (end)
+
+    同一 movement_id を 2 ノードに使い回し、ITA が受け付けるかを確認する目的も兼ねる。
+    クリーンアップは cleanup_test_conductors fixture が担う。
+    """
+
+    def test_create_conductor_with_two_movements(
+        self, api_client, ita_url, movement_id_for_conductor, created_conductors
+    ):
+        """2 Movement 直列 Conductor の登録が成功すること."""
+        name = "test-conductor-pytest-multi"
+        url = ita_url(CONDUCTOR_EDIT_PATH)
+        movements = [
+            {
+                "movement_id": movement_id_for_conductor,
+                "movement_name": MOVEMENT_NAME_FOR_TEST,
+                "orchestra_id": "3",
+            },
+            {
+                "movement_id": movement_id_for_conductor,
+                "movement_name": MOVEMENT_NAME_FOR_TEST,
+                "orchestra_id": "3",
+            },
+        ]
+        payload = _build_multi_movement_conductor_payload(name, movements)
+        resp = api_client.post(url, json=payload)
+        body = resp.json()
+        if resp.status_code == 200 and body.get("result") == "000-00000":
+            conductor_id = _extract_conductor_id(body)
+            if conductor_id:
+                created_conductors.append(conductor_id)
+        assert resp.status_code == 200, (
+            f"Expected 200, got {resp.status_code}\n{resp.text}"
+        )
+        assert body.get("result") == "000-00000", (
+            f"Unexpected result: {body.get('result')}\nfull response: {body}"
+        )
+
+    def test_print_multi_movement_response(
+        self, api_client, ita_url, movement_id_for_conductor
+    ):
+        """【学習用】2 Movement 直列 Conductor の登録レスポンスを全件表示する.
+
+        pytest -s で実行するとレスポンス構造を確認できる。
+        """
+        import json
+
+        name = "test-conductor-pytest-multi-inspect"
+        url = ita_url(CONDUCTOR_EDIT_PATH)
+        movements = [
+            {
+                "movement_id": movement_id_for_conductor,
+                "movement_name": MOVEMENT_NAME_FOR_TEST,
+                "orchestra_id": "3",
+            },
+            {
+                "movement_id": movement_id_for_conductor,
+                "movement_name": MOVEMENT_NAME_FOR_TEST,
+                "orchestra_id": "3",
+            },
+        ]
+        payload = _build_multi_movement_conductor_payload(name, movements)
+        resp = api_client.post(url, json=payload)
+        print(
+            f"\n=== 2 Movement 直列 Conductor 登録レスポンス (status={resp.status_code}) ==="
+        )
+        print(json.dumps(resp.json(), ensure_ascii=False, indent=2))
+
+
 # ── 手動廃止テスト ──────────────────────────────────────────────────────────
 
 
@@ -496,3 +686,167 @@ def _build_discard_payload(conductor_class_id: str, last_update_date_time: str) 
             },
         }
     ]
+
+
+def _build_multi_movement_conductor_payload(
+    conductor_name: str,
+    movements: list[dict],
+) -> dict:
+    """N Movement 直列チェーンの Conductor JSON を動的生成して返す.
+
+    設計メモのノード採番ルール（3-d の ConductorResource.create() プロトタイプ）:
+      - node-1: start  (out: terminal-1)
+      - node-3 〜 node-(N+2): movement ノード（インデックス i → node-(i+3)）
+      - node-2: end    (in: terminal-2)
+      - terminal-1, terminal-2: start/end の固定端子
+      - movement ノード i の端子: in=terminal-(2*i+5), out=terminal-(2*i+6)
+      - line-1 〜 line-(N+1): 隣接ノードを順番に接続
+
+    Args:
+        conductor_name: Conductor 名
+        movements: [{"movement_id": ..., "movement_name": ..., "orchestra_id": ...}]
+    """
+    n = len(movements)
+    x_offset = 300
+
+    # config
+    payload: dict = {
+        "config": {
+            "nodeNumber": n + 2,
+            "terminalNumber": 2 + n * 2,
+            "edgeNumber": n + 1,
+            "editorVersion": "2.0.0",
+        },
+        "conductor": {
+            "id": None,
+            "conductor_name": conductor_name,
+            "last_update_date_time": None,
+            "note": "",
+            "notice_info": {},
+            "grid_snap": True,
+            "movement_width": "auto",
+            "movement_white_space": "wrap",
+        },
+    }
+
+    # movement ノードの node_id 一覧（node-3, node-4, ...）
+    movement_node_ids = [f"node-{i + 3}" for i in range(n)]
+
+    # start ノード (node-1)
+    payload["node-1"] = {
+        "type": "start",
+        "id": "node-1",
+        "terminal": {
+            "terminal-1": {
+                "id": "terminal-1",
+                "type": "out",
+                "x": 7657,
+                "y": 8000,
+                "targetNode": movement_node_ids[0],
+                "edge": "line-1",
+            }
+        },
+        "x": 7475,
+        "y": 7971,
+        "w": 199.047,
+        "h": 58,
+    }
+
+    # end ノード (node-2)
+    end_x = 7475 + (n + 1) * x_offset
+    payload["node-2"] = {
+        "type": "end",
+        "id": "node-2",
+        "terminal": {
+            "terminal-2": {
+                "id": "terminal-2",
+                "type": "in",
+                "x": end_x + 18,
+                "y": 8000,
+                "targetNode": movement_node_ids[-1],
+                "edge": f"line-{n + 1}",
+            }
+        },
+        "end_type": "6",
+        "x": end_x,
+        "y": 7971,
+        "w": 199.047,
+        "h": 58,
+    }
+
+    # movement ノードと line を生成
+    for i, movement in enumerate(movements):
+        node_id = movement_node_ids[i]
+        in_terminal_id = f"terminal-{2 * i + 5}"
+        out_terminal_id = f"terminal-{2 * i + 6}"
+        prev_node = "node-1" if i == 0 else movement_node_ids[i - 1]
+        next_node = "node-2" if i == n - 1 else movement_node_ids[i + 1]
+        in_line = f"line-{i + 1}"
+        out_line = f"line-{i + 2}"
+        x = 7475 + (i + 1) * x_offset
+
+        payload[node_id] = {
+            "type": "movement",
+            "id": node_id,
+            "terminal": {
+                in_terminal_id: {
+                    "id": in_terminal_id,
+                    "type": "in",
+                    "x": x + 17,
+                    "y": 8000,
+                    "targetNode": prev_node,
+                    "edge": in_line,
+                },
+                out_terminal_id: {
+                    "id": out_terminal_id,
+                    "type": "out",
+                    "x": x + 247,
+                    "y": 8000,
+                    "targetNode": next_node,
+                    "edge": out_line,
+                },
+            },
+            "movement_id": movement["movement_id"],
+            "skip_flag": 0,
+            "operation_id": None,
+            "orchestra_id": movement.get("orchestra_id", "3"),
+            "movement_name": movement["movement_name"],
+            "x": x,
+            "y": 7971,
+            "w": 264.297,
+            "h": 58,
+        }
+
+        # in-edge（start or 前 movement → このノード）
+        if i == 0:
+            payload["line-1"] = {
+                "type": "edge",
+                "id": "line-1",
+                "outNode": "node-1",
+                "outTerminal": "terminal-1",
+                "inNode": node_id,
+                "inTerminal": in_terminal_id,
+            }
+        else:
+            prev_out_terminal = f"terminal-{2 * (i - 1) + 6}"
+            payload[in_line] = {
+                "type": "edge",
+                "id": in_line,
+                "outNode": prev_node,
+                "outTerminal": prev_out_terminal,
+                "inNode": node_id,
+                "inTerminal": in_terminal_id,
+            }
+
+    # 最後の movement → end の edge
+    last_out_terminal = f"terminal-{2 * (n - 1) + 6}"
+    payload[f"line-{n + 1}"] = {
+        "type": "edge",
+        "id": f"line-{n + 1}",
+        "outNode": movement_node_ids[-1],
+        "outTerminal": last_out_terminal,
+        "inNode": "node-2",
+        "inTerminal": "terminal-2",
+    }
+
+    return payload
